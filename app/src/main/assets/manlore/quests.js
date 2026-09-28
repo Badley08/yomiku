@@ -1,0 +1,1225 @@
+/* ============================================
+   MANLORE v8.0.0 - QUESTS.JS
+   Système de Quêtes XP & Progression de Rangs
+   ============================================ */
+
+'use strict';
+
+const QUESTS_STORAGE_KEY = 'manlore_quest_progression_v5';
+
+const QUEST_I18N = {
+    fr: {
+        rank: 'Rang',
+        expTotal: 'EXP Total',
+        towards: 'vers',
+        maxRank: 'Niveau Maximum',
+        tabDaily: 'Quotidiennes',
+        tabWeekly: 'Hebdo',
+        tabMonthly: 'Mensuelles',
+        tabAnnual: 'Annuelles',
+        noQuests: 'Aucune quête disponible',
+        yourRank: 'VOTRE RANG',
+        expRequired: 'EXP requis',
+        claimBtn: 'Réclamer',
+        claimed: 'Réclamé',
+        missingExp: 'Il vous manque <strong>{exp} EXP</strong> pour atteindre le rang <strong>{title}</strong>.',
+        maxRankCongrats: 'Félicitations ! Vous avez atteint le rang suprême du ManLore !',
+        guideTitle: "Comment gagner plus d'XP ?",
+        hierarchyTitle: 'Hiérarchie des Rangs (E ➔ S)',
+        statusTitle: 'Votre statut actuel',
+        modalTitle: 'Système de Rangs & Progression',
+        guideChaptersTitle: 'Lire des Chapitres',
+        guideChaptersVal: '+5 EXP par chapitre lu',
+        guideAddTitle: 'Ajouter une Œuvre',
+        guideAddVal: '+25 EXP par œuvre ajoutée',
+        guideRateTitle: 'Évaluer & Noter',
+        guideRateVal: '+15 EXP par note donnée',
+        guideStreakTitle: 'Maintenir sa Série',
+        guideStreakVal: '+50 EXP bonus de fidélité',
+        guideQuestsTitle: 'Quêtes Quotidiennes / Hebdo',
+        guideQuestsVal: '+50 à +800 EXP par quête',
+        guideAnnualTitle: 'Quêtes Annuelles',
+        guideAnnualVal: "Jusqu'à +25 000 EXP",
+    },
+    en: {
+        rank: 'Rank',
+        expTotal: 'Total EXP',
+        towards: 'towards',
+        maxRank: 'Maximum Rank',
+        tabDaily: 'Daily',
+        tabWeekly: 'Weekly',
+        tabMonthly: 'Monthly',
+        tabAnnual: 'Annual',
+        noQuests: 'No quests available',
+        yourRank: 'YOUR RANK',
+        expRequired: 'EXP required',
+        claimBtn: 'Claim',
+        claimed: 'Claimed',
+        missingExp: 'You need <strong>{exp} EXP</strong> to reach <strong>{title}</strong> rank.',
+        maxRankCongrats: 'Congratulations! You have reached the supreme rank of ManLore!',
+        guideTitle: 'How to earn more XP?',
+        hierarchyTitle: 'Rank Hierarchy (E ➔ S)',
+        statusTitle: 'Your current status',
+        modalTitle: 'Rank System & Progression',
+        guideChaptersTitle: 'Read Chapters',
+        guideChaptersVal: '+5 EXP per read chapter',
+        guideAddTitle: 'Add a Title',
+        guideAddVal: '+25 EXP per added title',
+        guideRateTitle: 'Rate & Review',
+        guideRateVal: '+15 EXP per rating',
+        guideStreakTitle: 'Maintain Streak',
+        guideStreakVal: '+50 EXP loyalty bonus',
+        guideQuestsTitle: 'Daily / Weekly Quests',
+        guideQuestsVal: '+50 to +800 EXP per quest',
+        guideAnnualTitle: 'Annual Quests',
+        guideAnnualVal: 'Up to +25,000 EXP',
+    },
+    es: {
+        rank: 'Rango',
+        expTotal: 'EXP Total',
+        towards: 'hacia',
+        maxRank: 'Nivel Máximo',
+        tabDaily: 'Diarias',
+        tabWeekly: 'Semanales',
+        tabMonthly: 'Mensuales',
+        tabAnnual: 'Anuales',
+        noQuests: 'Sin misiones disponibles',
+        yourRank: 'TU RANGO',
+        expRequired: 'EXP requerido',
+        claimBtn: 'Reclamar',
+        claimed: 'Reclamado',
+        missingExp: 'Te faltan <strong>{exp} EXP</strong> para alcanzar el rango <strong>{title}</strong>.',
+        maxRankCongrats: '¡Felicidades! ¡Has alcanzado el rango supremo de ManLore!',
+        guideTitle: '¿Cómo ganar más XP?',
+        hierarchyTitle: 'Jerarquía de Rangos (E ➔ S)',
+        statusTitle: 'Tu estado actual',
+        modalTitle: 'Sistema de Rangos y Progresión',
+        guideChaptersTitle: 'Leer Capítulos',
+        guideChaptersVal: '+5 EXP por capítulo leído',
+        guideAddTitle: 'Añadir una Obra',
+        guideAddVal: '+25 EXP por obra añadida',
+        guideRateTitle: 'Calificar y Puntuar',
+        guideRateVal: '+15 EXP por calificación',
+        guideStreakTitle: 'Mantener la Racha',
+        guideStreakVal: '+50 EXP bono de fidelidad',
+        guideQuestsTitle: 'Misiones Diarias / Semanales',
+        guideQuestsVal: '+50 a +800 EXP por misión',
+        guideAnnualTitle: 'Misiones Anuales',
+        guideAnnualVal: 'Hasta +25,000 EXP',
+    }
+};
+
+class QuestManager {
+    constructor() {
+        this.currentLang = 'fr';
+        this.questData = null;
+        this.activeTab = 'daily';
+        this.data = this.loadProgression();
+        this.initActiveTimer();
+        this.loadQuestDefinitions();
+    }
+
+    getStorageKey() {
+        try {
+            if (typeof Parse !== 'undefined' && Parse.User) {
+                const u = Parse.User.current();
+                if (u && u.id) return `manlore_quest_progression_usr_${u.id}`;
+            }
+            if (window.currentUser && window.currentUser.id) {
+                return `manlore_quest_progression_usr_${window.currentUser.id}`;
+            }
+        } catch(e){}
+        return QUESTS_STORAGE_KEY;
+    }
+
+    loadProgression() {
+        try {
+            const key = this.getStorageKey();
+            let raw = localStorage.getItem(key);
+            if (!raw) {
+                const legacy = localStorage.getItem(QUESTS_STORAGE_KEY);
+                if (legacy && key !== QUESTS_STORAGE_KEY) {
+                    raw = legacy;
+                    try { localStorage.setItem(key, legacy); } catch {}
+                }
+            }
+            if (raw) {
+                const parsed = JSON.parse(raw);
+                if (!parsed.claimedQuests) parsed.claimedQuests = {};
+                return parsed;
+            }
+        } catch {}
+
+        return {
+            exp: 0,
+            activeMinutesToday: 0,
+            activeMinutesWeek: 0,
+            activeMinutesMonth: 0,
+            activeMinutesYear: 0,
+            titlesAddedToday: 0,
+            titlesAddedWeek: 0,
+            titlesAddedMonth: 0,
+            titlesAddedYear: 0,
+            titlesEditedToday: 0,
+            titlesEditedWeek: 0,
+            titlesEditedMonth: 0,
+            titlesEditedYear: 0,
+            titlesDeletedToday: 0,
+            titlesDeletedWeek: 0,
+            titlesDeletedMonth: 0,
+            titlesDeletedYear: 0,
+            titlesViewedToday: [],
+            titlesViewedWeek: [],
+            titlesViewedMonth: [],
+            titlesViewedYear: [],
+            actionsToday: new Set(),
+            actionsWeek: new Set(),
+            actionsMonth: new Set(),
+            claimedQuests: {},
+            questClaimCounts: {},
+            totalQuestsClaimedDaily: 0,
+            lastDailyDate: new Date().toISOString().split('T')[0],
+            lastWeekNumber: this.getWeekNumber(new Date()),
+            lastMonth: new Date().getMonth(),
+            lastYear: new Date().getFullYear(),
+            activeDaysThisWeek: new Set([new Date().toISOString().split('T')[0]]),
+            activeDaysThisMonth: new Set([new Date().toISOString().split('T')[0]]),
+            activeDaysThisYear: new Set([new Date().toISOString().split('T')[0]]),
+        };
+    }
+
+    cleanStorageQuota() {
+        try {
+            console.warn('[Quests] Nettoyage d\'urgence du localStorage suite à QuotaExceededError...');
+
+            try { localStorage.removeItem('manlore_translation_cache'); } catch {}
+            try { localStorage.removeItem('manlore_jikan_cache_v6'); } catch {}
+            try { localStorage.removeItem('com.karlitodev.manlore/logs'); } catch {}
+
+            const legacyKeys = [
+                'manlore_quest_progression_v1',
+                'manlore_quest_progression_v2',
+                'manlore_quest_progression_v3',
+                'manlore_quest_progression_v4'
+            ];
+            legacyKeys.forEach(k => {
+                if (k !== this.getStorageKey()) {
+                    try { localStorage.removeItem(k); } catch {}
+                }
+            });
+
+            if (Array.isArray(this.data.titlesViewedYear)) {
+                this.data.titlesViewedYear = this.data.titlesViewedYear.slice(-100);
+            }
+            if (Array.isArray(this.data.titlesViewedMonth)) {
+                this.data.titlesViewedMonth = this.data.titlesViewedMonth.slice(-100);
+            }
+            if (Array.isArray(this.data.titlesViewedWeek)) {
+                this.data.titlesViewedWeek = this.data.titlesViewedWeek.slice(-50);
+            }
+            if (Array.isArray(this.data.titlesViewedToday)) {
+                this.data.titlesViewedToday = this.data.titlesViewedToday.slice(-30);
+            }
+        } catch (e) {
+            console.warn('[Quests] Nettoyage quota échoué:', e);
+        }
+    }
+
+    saveProgression(immediateCloud = false) {
+        if (Array.isArray(this.data.titlesViewedYear) && this.data.titlesViewedYear.length > 300) {
+            this.data.titlesViewedYear = this.data.titlesViewedYear.slice(-300);
+        }
+        if (Array.isArray(this.data.titlesViewedMonth) && this.data.titlesViewedMonth.length > 300) {
+            this.data.titlesViewedMonth = this.data.titlesViewedMonth.slice(-300);
+        }
+        if (Array.isArray(this.data.titlesViewedWeek) && this.data.titlesViewedWeek.length > 150) {
+            this.data.titlesViewedWeek = this.data.titlesViewedWeek.slice(-150);
+        }
+        if (Array.isArray(this.data.titlesViewedToday) && this.data.titlesViewedToday.length > 100) {
+            this.data.titlesViewedToday = this.data.titlesViewedToday.slice(-100);
+        }
+
+        const serializable = {
+            ...this.data,
+            titlesViewedToday: Array.isArray(this.data.titlesViewedToday) ? this.data.titlesViewedToday : [],
+            titlesViewedWeek: Array.isArray(this.data.titlesViewedWeek) ? this.data.titlesViewedWeek : [],
+            titlesViewedMonth: Array.isArray(this.data.titlesViewedMonth) ? this.data.titlesViewedMonth : [],
+            titlesViewedYear: Array.isArray(this.data.titlesViewedYear) ? this.data.titlesViewedYear : [],
+            actionsToday: Array.from(this.data.actionsToday || []),
+            actionsWeek: Array.from(this.data.actionsWeek || []),
+            actionsMonth: Array.from(this.data.actionsMonth || []),
+            activeDaysThisWeek: Array.from(this.data.activeDaysThisWeek || []),
+            activeDaysThisMonth: Array.from(this.data.activeDaysThisMonth || []),
+            activeDaysThisYear: Array.from(this.data.activeDaysThisYear || []),
+            claimedQuests: this.data.claimedQuests || {}
+        };
+
+        try {
+            localStorage.setItem(this.getStorageKey(), JSON.stringify(serializable));
+        } catch (e) {
+            if (e.name === 'QuotaExceededError' || e.code === 22 || e.number === -2147024882) {
+                this.cleanStorageQuota();
+                try {
+                    const retrySerializable = {
+                        ...serializable,
+                        titlesViewedYear: (serializable.titlesViewedYear || []).slice(-100),
+                        titlesViewedMonth: (serializable.titlesViewedMonth || []).slice(-100)
+                    };
+                    localStorage.setItem(this.getStorageKey(), JSON.stringify(retrySerializable));
+                    console.log('[Quests] Sauvegarde locale réussie après libération du quota.');
+                } catch (retryErr) {
+                    if (!this._quotaWarned) {
+                        console.warn('[Quests] Stockage local plein. La synchronisation cloud reste active.', retryErr);
+                        this._quotaWarned = true;
+                    }
+                }
+            } else {
+                console.warn('[Quests] Erreur sauvegarde locale', e);
+            }
+        }
+
+        this.syncToCloud(serializable, immediateCloud);
+    }
+
+    onLogout() {
+        if (this._cloudTimer) clearTimeout(this._cloudTimer);
+        this.data = this.getDefaultProgression();
+    }
+
+    syncToCloud(serializable, immediate = false) {
+        if (this._cloudTimer) clearTimeout(this._cloudTimer);
+        const doSave = async () => {
+            try {
+                if (typeof Parse === 'undefined' || !Parse.User) return;
+                const isGuest = localStorage.getItem('manlore_guest_mode') === 'true';
+                if (isGuest || !navigator.onLine) return;
+                const user = Parse.User.current();
+                if (!user || !user.getSessionToken()) return;  // Authentification requise
+                const rankInfo = this.getCurrentRankInfo();
+                user.set('exp', this.data.exp || 0);
+                user.set('rank', rankInfo.rank);
+                user.set('rankTitle', rankInfo.title);
+                user.set('progressionData', serializable);
+                await user.save();
+                console.log('[Quests] Progression synchronisée sur le serveur:', this.data.exp, 'EXP, Rang', rankInfo.rank);
+            } catch (err) {
+                console.warn('[Quests] Cloud sync note:', err.message);
+            }
+        };
+
+        if (immediate) {
+            doSave();
+        } else {
+            this._cloudTimer = setTimeout(doSave, 800);
+        }
+    }
+
+    async syncFromCloud() {
+        try {
+            if (typeof Parse === 'undefined' || !Parse.User) return;
+            const isGuest = localStorage.getItem('manlore_guest_mode') === 'true';
+            if (isGuest || !navigator.onLine) return;
+            const user = Parse.User.current();
+            if (!user || !user.getSessionToken()) return;  // Authentification requise
+
+            await user.fetch().catch(() => {});
+            const cloudData = user.get('progressionData');
+            const cloudExp = user.get('exp') || 0;
+
+            if (cloudData && typeof cloudData === 'object') {
+                if (cloudExp >= (this.data.exp || 0)) {
+                    this.data = { ...this.data, ...cloudData, exp: cloudExp };
+                } else {
+                    this.saveProgression(true);
+                }
+            } else if (cloudExp > 0) {
+                this.data.exp = Math.max(this.data.exp || 0, cloudExp);
+                this.saveProgression(true);
+            }
+
+            console.log('[Quests] Progression chargée depuis le serveur:', this.data.exp, 'EXP');
+            if (typeof renderQuestUI === 'function') renderQuestUI();
+        } catch (e) {
+            console.warn('[Quests] Erreur syncFromCloud:', e);
+        }
+    }
+
+    onLogout() {
+        this.data = this.loadProgression();
+        if (typeof renderQuestUI === 'function') renderQuestUI();
+    }
+
+    getWeekNumber(d) {
+        const date = new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()));
+        const dayNum = date.getUTCDay() || 7;
+        date.setUTCDate(date.getUTCDate() + 4 - dayNum);
+        const yearStart = new Date(Date.UTC(date.getUTCFullYear(), 0, 1));
+        return Math.ceil((((date - yearStart) / 86400000) + 1) / 7);
+    }
+
+    getStreak() {
+        const today = new Date().toISOString().split('T')[0];
+        const yesterday = new Date(Date.now() - 86400000).toISOString().split('T')[0];
+        const lastDate = this.data.lastStreakDate;
+        let count = this.data.streakCount || 0;
+
+        if (!lastDate) return count > 0 ? count : 1;
+        if (lastDate === today) return count;
+        if (lastDate === yesterday) return count;
+        return 0; // Streak expired
+    }
+
+    recordDailyActivity(skipSave = false) {
+        const today = new Date().toISOString().split('T')[0];
+        const yesterday = new Date(Date.now() - 86400000).toISOString().split('T')[0];
+        const lastDate = this.data.lastStreakDate;
+        let changed = false;
+
+        if (!lastDate) {
+            this.data.streakCount = 1;
+            this.data.lastStreakDate = today;
+            changed = true;
+        } else if (lastDate === today) {
+            // Already counted today
+        } else if (lastDate === yesterday) {
+            this.data.streakCount = (this.data.streakCount || 0) + 1;
+            this.data.lastStreakDate = today;
+            if (this.data.streakCount > (this.data.longestStreak || 0)) {
+                this.data.longestStreak = this.data.streakCount;
+            }
+            if (window.showToast && this.data.streakCount > 1) {
+                window.showToast(`🔥 Série active : ${this.data.streakCount} jours consécutifs !`, 'success');
+            }
+            changed = true;
+        } else {
+            // Broken streak
+            this.data.streakCount = 1;
+            this.data.lastStreakDate = today;
+            changed = true;
+        }
+
+        if (this.data.streakCount % 7 === 0) {
+            this.data.completedDailyStreaks = (this.data.completedDailyStreaks || 0) + 1;
+            changed = true;
+        }
+
+        this.checkStreakNotification();
+        if (changed && !skipSave) {
+            this.saveProgression();
+        }
+        return changed;
+    }
+
+    checkStreakNotification() {
+        const today = new Date().toISOString().split('T')[0];
+        const lastDate = this.data.lastStreakDate;
+        const now = new Date();
+        const currentHour = now.getHours();
+
+        // If after 18h and user hasn't logged streak activity today, warn them!
+        if (lastDate !== today && currentHour >= 18) {
+            if (window.sendPushNotification) {
+                const title = (window.i18n && window.i18n.t('notif.streak.title')) || '⚠️ ManLore streak at risk!';
+                const body = (window.i18n && window.i18n.t('notif.streak.body')) || 'Your daily streak is about to expire! Complete your daily quests before midnight!';
+                window.sendPushNotification(title, body, 'streak-warning');
+            }
+        }
+    }
+
+    checkResets() {
+        const now = new Date();
+        const today = now.toISOString().split('T')[0];
+        const weekNum = this.getWeekNumber(now);
+        const monthNum = now.getMonth();
+        const yearNum = now.getFullYear();
+
+        let modified = false;
+
+        if (Array.isArray(this.data.actionsToday)) this.data.actionsToday = new Set(this.data.actionsToday);
+        if (Array.isArray(this.data.actionsWeek)) this.data.actionsWeek = new Set(this.data.actionsWeek);
+        if (Array.isArray(this.data.actionsMonth)) this.data.actionsMonth = new Set(this.data.actionsMonth);
+        if (Array.isArray(this.data.activeDaysThisWeek)) this.data.activeDaysThisWeek = new Set(this.data.activeDaysThisWeek);
+        if (Array.isArray(this.data.activeDaysThisMonth)) this.data.activeDaysThisMonth = new Set(this.data.activeDaysThisMonth);
+        if (Array.isArray(this.data.activeDaysThisYear)) this.data.activeDaysThisYear = new Set(this.data.activeDaysThisYear);
+        if (!this.data.claimedQuests) this.data.claimedQuests = {};
+
+        if (this.data.lastDailyDate !== today) {
+            this.data.lastDailyDate = today;
+            this.data.activeMinutesToday = 0;
+            this.data.titlesAddedToday = 0;
+            this.data.titlesEditedToday = 0;
+            this.data.titlesDeletedToday = 0;
+            this.data.chaptersReadToday = 0;
+            this.data.titlesRatedToday = 0;
+            this.data.titlesViewedToday = [];
+            this.data.actionsToday = new Set();
+            modified = true;
+        }
+
+        if (this.data.lastWeekNumber !== weekNum) {
+            this.data.lastWeekNumber = weekNum;
+            this.data.activeMinutesWeek = 0;
+            this.data.titlesAddedWeek = 0;
+            this.data.titlesEditedWeek = 0;
+            this.data.titlesDeletedWeek = 0;
+            this.data.chaptersReadWeek = 0;
+            this.data.titlesRatedWeek = 0;
+            this.data.titlesViewedWeek = [];
+            this.data.actionsWeek = new Set();
+            this.data.activeDaysThisWeek = new Set([today]);
+            modified = true;
+        }
+
+        if (this.data.lastMonth !== monthNum) {
+            this.data.lastMonth = monthNum;
+            this.data.activeMinutesMonth = 0;
+            this.data.titlesAddedMonth = 0;
+            this.data.titlesEditedMonth = 0;
+            this.data.titlesDeletedMonth = 0;
+            this.data.chaptersReadMonth = 0;
+            this.data.titlesRatedMonth = 0;
+            this.data.titlesViewedMonth = [];
+            this.data.actionsMonth = new Set();
+            this.data.activeDaysThisMonth = new Set([today]);
+            modified = true;
+        }
+
+        if (this.data.lastYear !== yearNum) {
+            this.data.lastYear = yearNum;
+            this.data.activeMinutesYear = 0;
+            this.data.titlesAddedYear = 0;
+            this.data.titlesEditedYear = 0;
+            this.data.titlesDeletedYear = 0;
+            this.data.chaptersReadYear = 0;
+            this.data.titlesRatedYear = 0;
+            this.data.titlesViewedYear = [];
+            this.data.activeDaysThisYear = new Set([today]);
+            modified = true;
+        }
+
+        if (!this.data.activeDaysThisWeek.has(today)) {
+            this.data.activeDaysThisWeek.add(today);
+            modified = true;
+        }
+        if (!this.data.activeDaysThisMonth.has(today)) {
+            this.data.activeDaysThisMonth.add(today);
+            modified = true;
+        }
+        if (!this.data.activeDaysThisYear.has(today)) {
+            this.data.activeDaysThisYear.add(today);
+            modified = true;
+        }
+
+        const streakChanged = this.recordDailyActivity(true);
+        if (modified || streakChanged) {
+            this.saveProgression();
+        }
+    }
+
+    initActiveTimer() {
+        this.checkResets();
+        setInterval(() => {
+            if (document.visibilityState === 'visible') {
+                this.checkResets();
+                this.data.activeMinutesToday = (this.data.activeMinutesToday || 0) + 1;
+                this.data.activeMinutesWeek = (this.data.activeMinutesWeek || 0) + 1;
+                this.data.activeMinutesMonth = (this.data.activeMinutesMonth || 0) + 1;
+                this.data.activeMinutesYear = (this.data.activeMinutesYear || 0) + 1;
+                this.saveProgression();
+                if (typeof renderQuestUI === 'function') renderQuestUI();
+            }
+        }, 60000);
+    }
+
+    async loadQuestDefinitions() {
+        const lang = (window.i18n?.lang || window.i18n?.currentLang || localStorage.getItem('manlore_lang') || 'fr').toLowerCase();
+        this.currentLang = ['en', 'es'].includes(lang) ? lang : 'fr';
+
+        const jsonFile = `manlore_${this.currentLang}-quests_xp.json`;
+        try {
+            const res = await fetch(jsonFile);
+            if (res.ok) {
+                this.questData = await res.json();
+                if (typeof renderQuestUI === 'function') renderQuestUI();
+                return;
+            }
+        } catch (e) {
+            console.warn('[Quests] Fallback to FR json fetch', e);
+        }
+
+        // Fallback fetch fr
+        try {
+            const resFr = await fetch('manlore_fr-quests_xp.json');
+            if (resFr.ok) {
+                this.questData = await resFr.json();
+                if (typeof renderQuestUI === 'function') renderQuestUI();
+            }
+        } catch {}
+    }
+
+    getText(key, vars = {}) {
+        const dict = QUEST_I18N[this.currentLang] || QUEST_I18N.fr;
+        let str = dict[key] || QUEST_I18N.fr[key] || key;
+        Object.keys(vars).forEach(k => {
+            str = str.replace(new RegExp(`\\{${k}\\}`, 'g'), vars[k]);
+        });
+        return str;
+    }
+
+    getRanks() {
+        const rawRanks = this.questData?.rank_system?.ranks || [
+            { rank: "E", title: "Novice du Lore", xp_required: 0, badge_svg: "<svg viewBox=\"0 0 24 24\" width=\"24\" height=\"24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z\"></path></svg>", color: "#95a5a6" },
+            { rank: "D", title: "Lecteur Curieux", xp_required: 1200, badge_svg: "<svg viewBox=\"0 0 24 24\" width=\"24\" height=\"24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><polyline points=\"14.5 17.5 3 6 3 3 6 3 17.5 14.5\"></polyline><line x1=\"13\" y1=\"19\" x2=\"19\" y2=\"13\"></line><line x1=\"16\" y1=\"16\" x2=\"20\" y2=\"20\"></line><line x1=\"19\" y1=\"21\" x2=\"21\" y2=\"19\"></line></svg>", color: "#2ecc71" },
+            { rank: "C", title: "Chasseur de Chapitres", xp_required: 3500, badge_svg: "<svg viewBox=\"0 0 24 24\" width=\"24\" height=\"24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"m14.5 17.5-11.5-11.5v-3h3l11.5 11.5\"></path><path d=\"m9.5 17.5 11.5-11.5v-3h-3l-11.5 11.5\"></path><line x1=\"5\" y1=\"19\" x2=\"19\" y2=\"5\"></line></svg>", color: "#3498db" },
+            { rank: "B", title: "Explorateur d'Univers", xp_required: 8000, badge_svg: "<svg viewBox=\"0 0 24 24\" width=\"24\" height=\"24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z\"></path><path d=\"M12 8v8\"></path><path d=\"M8 12h8\"></path></svg>", color: "#9b59b6" },
+            { rank: "A", title: "Érudit des Mondes", xp_required: 15000, badge_svg: "<svg viewBox=\"0 0 24 24\" width=\"24\" height=\"24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"m2 4 3 12h14l3-12-6 7-4-7-4 7-6-7zm3 16h14\"></path></svg>", color: "#f39c12" },
+            { rank: "S", title: "Seigneur du ManLore", xp_required: 25000, badge_svg: "<svg viewBox=\"0 0 24 24\" width=\"24\" height=\"24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.38-.5-2-1-3-1.072-2.143-.224-4.054 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.153.433-2.294 1-3a2.5 2.5 0 0 0 2.5 2.5z\"></path></svg>", color: "#e74c3c" },
+            { rank: "S+", title: "Monarque Suprême", xp_required: 40000, badge_svg: "<svg viewBox=\"0 0 24 24\" width=\"24\" height=\"24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><polygon points=\"12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2\"></polygon></svg>", color: "#ff3838" },
+            { rank: "SS", title: "Divinité du Lore", xp_required: 65000, badge_svg: "<svg viewBox=\"0 0 24 24\" width=\"24\" height=\"24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><circle cx=\"12\" cy=\"12\" r=\"10\"></circle><path d=\"m4.93 4.93 4.24 4.24\"></path><path d=\"m14.83 9.17 4.24-4.24\"></path><path d=\"m14.83 14.83 4.24 4.24\"></path><path d=\"m9.17 14.83-4.24 4.24\"></path><circle cx=\"12\" cy=\"12\" r=\"4\"></circle></svg>", color: "#ffd32a" },
+            { rank: "SSS", title: "Souverain Cosmique", xp_required: 100000, badge_svg: "<svg viewBox=\"0 0 24 24\" width=\"24\" height=\"24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"M12 2v20\"></path><path d=\"M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6\"></path><circle cx=\"12\" cy=\"12\" r=\"9\"></circle></svg>", color: "#ff007f" },
+            { rank: "Z", title: "Transcendance Cosmique", xp_required: 350000, badge_svg: "<svg viewBox=\"0 0 24 24\" width=\"24\" height=\"24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"M13 2L3 14h9l-1 8 10-12h-9l1-8z\"></path></svg>", color: "#a000ff", hidden: true }
+        ];
+
+        const currentExp = this.data?.exp || 0;
+        return rawRanks.filter(r => !r.hidden || currentExp >= 65000);
+    }
+
+    getCurrentRankInfo() {
+        const currentExp = this.data.exp || 0;
+        const ranks = this.getRanks();
+        let currentRank = ranks[0];
+        let nextRank = ranks[1] || null;
+
+        for (let i = 0; i < ranks.length; i++) {
+            if (currentExp >= ranks[i].xp_required) {
+                currentRank = ranks[i];
+                nextRank = ranks[i + 1] || null;
+            }
+        }
+
+        const expInCurrentRank = currentExp - currentRank.xp_required;
+        const totalExpForRank = nextRank ? (nextRank.xp_required - currentRank.xp_required) : 1000;
+        const percent = nextRank ? Math.min(100, Math.max(0, Math.round((expInCurrentRank / totalExpForRank) * 100))) : 100;
+        const remainingExp = nextRank ? Math.max(0, nextRank.xp_required - currentExp) : 0;
+
+        return {
+            rank: currentRank.rank,
+            title: currentRank.title,
+            badge_svg: currentRank.badge_svg || '',
+            color: currentRank.color || '#6c5ce7',
+            currentExp,
+            expInCurrentRank,
+            totalExpForRank,
+            percent,
+            remainingExp,
+            nextRankTitle: nextRank ? nextRank.title : this.getText('maxRank'),
+            nextRankXp: nextRank ? nextRank.xp_required : currentExp
+        };
+    }
+
+    addExp(amount, reason = '') {
+        const before = this.getCurrentRankInfo();
+        this.data.exp = (this.data.exp || 0) + amount;
+        this.saveProgression();
+        const after = this.getCurrentRankInfo();
+
+        if (window.showToast) {
+            window.showToast(`+${amount} EXP: ${reason}`, 'success');
+        }
+
+        if (before.rank !== after.rank) {
+            launchRankConfetti();
+            if (window.showToast) {
+                window.showToast(`[${this.getText('rank')} ${after.rank}] ${after.title} !`, 'success');
+            }
+            if (window.appLogger) {
+                window.appLogger.log('rank_up', `Promotion de Rang : ${after.rank}`, { from: before.rank, to: after.rank, totalExp: this.data.exp });
+            }
+        }
+
+        if (typeof renderQuestUI === 'function') renderQuestUI();
+    }
+
+    getClaimKey(questId, period) {
+        if (period === 'daily') return `${questId}_${this.data.lastDailyDate}`;
+        if (period === 'weekly') return `${questId}_W${this.data.lastWeekNumber}_${this.data.lastYear}`;
+        if (period === 'monthly') return `${questId}_M${this.data.lastMonth}_${this.data.lastYear}`;
+        if (period === 'annual') return `${questId}_Y${this.data.lastYear}`;
+        return questId;
+    }
+
+    claimQuest(questId, period) {
+        this.checkResets();
+        const claimKey = this.getClaimKey(questId, period);
+        if (this.data.claimedQuests[claimKey]) {
+            if (window.showToast) window.showToast('Quête déjà réclamée !', 'info');
+            return;
+        }
+
+        const quests = this.questData?.quests?.[period] || [];
+        const quest = quests.find(q => q.id === questId);
+        if (!quest) return;
+
+        const progress = this.calculateQuestProgress(quest, period);
+        if (!progress.completed) {
+            if (window.showToast) window.showToast('Objectif non atteint', 'warning');
+            return;
+        }
+
+        this.data.claimedQuests[claimKey] = true;
+        if (!this.data.questClaimCounts) this.data.questClaimCounts = {};
+        this.data.questClaimCounts[quest.id] = (this.data.questClaimCounts[quest.id] || 0) + 1;
+        if (period === 'daily') {
+            this.data.totalQuestsClaimedDaily = (this.data.totalQuestsClaimedDaily || 0) + 1;
+        }
+        this.addExp(quest.xp || 50, quest.title);
+        this.saveProgression();
+    }
+
+    // Synchronisation des stats de collection pour booster le démarrage
+    syncCollectionStats(items) {
+        if (!Array.isArray(items)) return;
+        const total = items.length;
+        if (total > (this.data.titlesAddedYear || 0)) {
+            this.data.titlesAddedYear = total;
+            this.data.titlesAddedMonth = Math.max(this.data.titlesAddedMonth || 0, total);
+            this.data.titlesAddedWeek = Math.max(this.data.titlesAddedWeek || 0, Math.min(total, 25));
+            this.data.titlesAddedToday = Math.max(this.data.titlesAddedToday || 0, Math.min(total, 5));
+        }
+
+        items.forEach(i => {
+            const idStr = String(i.id || i.objectId || i.title);
+            if (!this.data.titlesViewedYear.includes(idStr)) this.data.titlesViewedYear.push(idStr);
+            if (!this.data.titlesViewedMonth.includes(idStr)) this.data.titlesViewedMonth.push(idStr);
+        });
+
+        this.saveProgression();
+    }
+
+    onTitleAdded() {
+        this.checkResets();
+        const hour = new Date().getHours();
+        if (hour >= 22 || hour < 4) {
+            this.data.vampireAddsToday = (this.data.vampireAddsToday || 0) + 1;
+        }
+        this.data.titlesAddedToday = (this.data.titlesAddedToday || 0) + 1;
+        this.data.titlesAddedWeek = (this.data.titlesAddedWeek || 0) + 1;
+        this.data.titlesAddedMonth = (this.data.titlesAddedMonth || 0) + 1;
+        this.data.titlesAddedYear = (this.data.titlesAddedYear || 0) + 1;
+        this.data.actionsToday?.add('title_add');
+        this.data.actionsWeek?.add('title_add');
+        this.data.actionsMonth?.add('title_add');
+        this.addExp(25, 'Titre ajouté');
+    }
+
+    onTitleEdited() {
+        this.checkResets();
+        this.data.titlesEditedToday = (this.data.titlesEditedToday || 0) + 1;
+        this.data.titlesEditedWeek = (this.data.titlesEditedWeek || 0) + 1;
+        this.data.titlesEditedMonth = (this.data.titlesEditedMonth || 0) + 1;
+        this.data.titlesEditedYear = (this.data.titlesEditedYear || 0) + 1;
+        this.data.actionsToday?.add('title_edit');
+        this.data.actionsWeek?.add('title_edit');
+        this.data.actionsMonth?.add('title_edit');
+        this.addExp(15, 'Titre modifié');
+    }
+
+    onTitleDeleted() {
+        this.checkResets();
+        this.data.titlesDeletedToday = (this.data.titlesDeletedToday || 0) + 1;
+        this.data.titlesDeletedWeek = (this.data.titlesDeletedWeek || 0) + 1;
+        this.data.titlesDeletedMonth = (this.data.titlesDeletedMonth || 0) + 1;
+        this.data.titlesDeletedYear = (this.data.titlesDeletedYear || 0) + 1;
+        this.data.actionsToday?.add('title_delete');
+        this.data.actionsWeek?.add('title_delete');
+        this.data.actionsMonth?.add('title_delete');
+        this.addExp(10, 'Titre supprimé');
+    }
+
+    onTitleViewed(id) {
+        if (!id) return;
+        this.checkResets();
+        const strId = String(id);
+        if (!this.data.titlesViewedToday.includes(strId)) this.data.titlesViewedToday.push(strId);
+        if (!this.data.titlesViewedWeek.includes(strId)) this.data.titlesViewedWeek.push(strId);
+        if (!this.data.titlesViewedMonth.includes(strId)) this.data.titlesViewedMonth.push(strId);
+        if (!this.data.titlesViewedYear.includes(strId)) this.data.titlesViewedYear.push(strId);
+        this.data.actionsToday?.add('title_view');
+        this.data.actionsWeek?.add('title_view');
+        this.data.actionsMonth?.add('title_view');
+        this.saveProgression();
+    }
+
+    onChapterRead(count = 1) {
+        this.checkResets();
+        const hour = new Date().getHours();
+        if (hour >= 5 && hour < 8) {
+            this.data.earlyBirdReadsToday = (this.data.earlyBirdReadsToday || 0) + count;
+        }
+        this.data.chaptersReadToday = (this.data.chaptersReadToday || 0) + count;
+        this.data.chaptersReadWeek = (this.data.chaptersReadWeek || 0) + count;
+        this.data.chaptersReadMonth = (this.data.chaptersReadMonth || 0) + count;
+        this.data.chaptersReadYear = (this.data.chaptersReadYear || 0) + count;
+        this.data.actionsToday?.add('chapter_read');
+        this.data.actionsWeek?.add('chapter_read');
+        this.data.actionsMonth?.add('chapter_read');
+        this.addExp(count * 5, `${count} chapitre(s) lu(s)`);
+    }
+
+    onCustomEvent(eventName, count = 1) {
+        this.checkResets();
+        if (!this.data.customEvents) this.data.customEvents = {};
+        this.data.customEvents[eventName] = (this.data.customEvents[eventName] || 0) + count;
+        if (eventName === 'roulette_spin') {
+            this.data.rouletteSpinsTotal = (this.data.rouletteSpinsTotal || 0) + count;
+        }
+        this.saveProgression();
+    }
+
+    onTitleRated() {
+        this.checkResets();
+        this.data.titlesRatedToday = (this.data.titlesRatedToday || 0) + 1;
+        this.data.titlesRatedWeek = (this.data.titlesRatedWeek || 0) + 1;
+        this.data.titlesRatedMonth = (this.data.titlesRatedMonth || 0) + 1;
+        this.data.actionsToday?.add('title_rated');
+        this.data.actionsWeek?.add('title_rated');
+        this.data.actionsMonth?.add('title_rated');
+        this.addExp(15, 'Titre noté');
+    }
+
+    getQuestsForTab(tabKey) {
+        this.checkResets();
+        if (!this.questData?.quests) return [];
+
+        let rawList = this.questData.quests[tabKey] || [];
+
+        // Daily quest rotation based on date seed for non-activity daily quests
+        if (tabKey === 'daily' && rawList.length > 10) {
+            const todayStr = this.data.lastDailyDate || new Date().toISOString().split('T')[0];
+            let seed = 0;
+            for (let i = 0; i < todayStr.length; i++) seed = (seed << 5) - seed + todayStr.charCodeAt(i);
+            seed = Math.abs(seed);
+
+            const fixedCore = rawList.filter(q => q.target?.type === 'active_minutes');
+            const pool = rawList.filter(q => q.target?.type !== 'active_minutes');
+
+            const offset = seed % (pool.length || 1);
+            const rotatedPool = [...pool.slice(offset), ...pool.slice(0, offset)];
+            rawList = [...fixedCore, ...rotatedPool];
+        }
+
+        const evaluated = rawList.map(q => {
+            const progress = this.calculateQuestProgress(q, tabKey);
+            const claimKey = this.getClaimKey(q.id, tabKey);
+            const claimed = Boolean(this.data.claimedQuests?.[claimKey]);
+
+            return {
+                ...q,
+                current: progress.current,
+                targetValue: progress.target,
+                completed: progress.completed,
+                claimed: claimed,
+                percent: Math.min(100, Math.round((progress.current / progress.target) * 100))
+            };
+        });
+
+        // Separate unclaimed vs claimed
+        const unclaimed = evaluated.filter(q => !q.claimed);
+        const claimed = evaluated.filter(q => q.claimed);
+
+        // Sort unclaimed so that completed (accomplished background) quests ALWAYS come first!
+        unclaimed.sort((a, b) => {
+            if (a.completed && !b.completed) return -1;
+            if (!a.completed && b.completed) return 1;
+            return b.percent - a.percent;
+        });
+
+        // Return up to 10 active unclaimed quests + claimed quests for current view
+        const visibleUnclaimed = unclaimed.slice(0, 10);
+        return [...visibleUnclaimed, ...claimed];
+    }
+
+    calculateQuestProgress(quest, period) {
+        const t = quest.target || {};
+        let current = 0;
+        let target = t.value || 1;
+
+        switch (t.type) {
+            case 'active_minutes':
+                current = period === 'daily' ? this.data.activeMinutesToday :
+                          period === 'weekly' ? this.data.activeMinutesWeek :
+                          period === 'monthly' ? this.data.activeMinutesMonth : this.data.activeMinutesYear;
+                break;
+            case 'title_add':
+                current = period === 'daily' ? this.data.titlesAddedToday :
+                          period === 'weekly' ? this.data.titlesAddedWeek :
+                          period === 'monthly' ? this.data.titlesAddedMonth : this.data.titlesAddedYear;
+                break;
+            case 'title_edit':
+                current = period === 'daily' ? this.data.titlesEditedToday :
+                          period === 'weekly' ? this.data.titlesEditedWeek :
+                          period === 'monthly' ? this.data.titlesEditedMonth : this.data.titlesEditedYear;
+                break;
+            case 'title_delete':
+                current = period === 'daily' ? this.data.titlesDeletedToday :
+                          period === 'weekly' ? this.data.titlesDeletedWeek :
+                          period === 'monthly' ? this.data.titlesDeletedMonth : this.data.titlesDeletedYear;
+                break;
+            case 'title_view':
+                current = period === 'daily' ? this.data.titlesViewedToday.length :
+                          period === 'weekly' ? this.data.titlesViewedWeek.length :
+                          period === 'monthly' ? this.data.titlesViewedMonth.length : this.data.titlesViewedYear.length;
+                break;
+            case 'active_days':
+                current = period === 'weekly' ? (this.data.activeDaysThisWeek?.size || 1) :
+                          period === 'monthly' ? (this.data.activeDaysThisMonth?.size || 1) : (this.data.activeDaysThisYear?.size || 1);
+                break;
+            case 'unique_actions':
+                current = period === 'daily' ? (this.data.actionsToday?.size || 0) :
+                          period === 'weekly' ? (this.data.actionsWeek?.size || 0) : (this.data.actionsMonth?.size || 0);
+                break;
+            case 'daily_activity_streak':
+                current = this.getStreak();
+                break;
+            case 'completed_daily_streaks':
+                current = this.data.completedDailyStreaks || Math.floor((this.getStreak() || 0) / 7);
+                break;
+            case 'chapters_read':
+                current = period === 'daily' ? (this.data.chaptersReadToday || 0) :
+                          period === 'weekly' ? (this.data.chaptersReadWeek || 0) :
+                          period === 'monthly' ? (this.data.chaptersReadMonth || 0) : (this.data.chaptersReadYear || 0);
+                break;
+            case 'chapters_read_total':
+                if (typeof allItems !== 'undefined' && Array.isArray(allItems)) {
+                    current = allItems.reduce((sum, item) => sum + (parseInt(item.chapters) || 0), 0);
+                } else {
+                    current = this.data.chaptersReadYear || 0;
+                }
+                break;
+            case 'quest_repetition':
+                const counts = Object.values(this.data.questClaimCounts || {});
+                current = counts.length > 0 ? Math.max(...counts) : 0;
+                break;
+            case 'quests_completed_period':
+                current = this.data.totalQuestsClaimedDaily || 0;
+                break;
+            case 'rating_given':
+                current = period === 'daily' ? (this.data.titlesRatedToday || 0) :
+                          period === 'weekly' ? (this.data.titlesRatedWeek || 0) : (this.data.titlesRatedMonth || 0);
+                break;
+            case 'collection_size':
+            case 'titles_in_collection':
+                current = typeof allItems !== 'undefined' ? allItems.length : (this.data.titlesAddedYear || 0);
+                break;
+            case 'compound':
+                const conds = t.conditions || [];
+                let allMet = true;
+                conds.forEach(c => {
+                    if (c.includes('title_add') && (this.data.titlesAddedToday || 0) < 1) allMet = false;
+                    if (c.includes('title_edit') && (this.data.titlesEditedToday || 0) < 1) allMet = false;
+                    if (c.includes('title_view') && (!this.data.titlesViewedToday || this.data.titlesViewedToday.length < 1)) allMet = false;
+                });
+                current = allMet ? 1 : 0;
+                target = 1;
+                break;
+            case 'vampire_add':
+                current = this.data.vampireAddsToday || 0;
+                break;
+            case 'early_bird_read':
+                current = this.data.earlyBirdReadsToday || 0;
+                break;
+            case 'roulette_spin':
+                current = this.data.rouletteSpinsTotal || 0;
+                break;
+            case 'collection_types':
+                if (typeof allItems !== 'undefined' && Array.isArray(allItems)) {
+                    const types = new Set(allItems.map(i => i.type || 'Manga'));
+                    current = types.size;
+                } else {
+                    current = 1;
+                }
+                break;
+            case 'rank':
+                const currentRankInfo = this.getCurrentRankInfo();
+                const ranks = this.getRanks();
+                const targetIdx = ranks.findIndex(r => r.rank === t.to);
+                const curIdx = ranks.findIndex(r => r.rank === currentRankInfo.rank);
+                current = curIdx >= targetIdx ? 1 : 0;
+                target = 1;
+                break;
+            case 'daily_return':
+                current = (this.data.activeDaysThisWeek?.size || 0) >= 2 ? 1 : 0;
+                target = 1;
+                break;
+            case 'title_interactions':
+                current = period === 'daily' ? ((this.data.titlesAddedToday||0)+(this.data.titlesEditedToday||0)+(this.data.titlesDeletedToday||0)+(this.data.titlesViewedToday?.length||0)) :
+                          period === 'weekly' ? ((this.data.titlesAddedWeek||0)+(this.data.titlesEditedWeek||0)+(this.data.titlesDeletedWeek||0)+(this.data.titlesViewedWeek?.length||0)) :
+                          period === 'monthly' ? ((this.data.titlesAddedMonth||0)+(this.data.titlesEditedMonth||0)+(this.data.titlesDeletedMonth||0)+(this.data.titlesViewedMonth?.length||0)) : 
+                          ((this.data.titlesAddedYear||0)+(this.data.titlesEditedYear||0)+(this.data.titlesDeletedYear||0)+(this.data.titlesViewedYear?.length||0));
+                break;
+            default:
+                current = 0;
+                break;
+        }
+
+        return { current, target, completed: current >= target };
+    }
+}
+
+window.questManager = new QuestManager();
+
+// ============ RENDU DE L'INTERFACE DES QUÊTES ============
+
+function renderQuestUI() {
+    const container = document.getElementById('questProgressionContainer');
+    if (!container) return;
+
+    const qm = window.questManager;
+    const rankInfo = qm.getCurrentRankInfo();
+    const activeTab = qm.activeTab || 'daily';
+    const quests = qm.getQuestsForTab(activeTab);
+
+    container.innerHTML = `
+        <div class="quest-card-modern">
+            <div class="quest-header-flex">
+                <div class="quest-rank-badge clickable-rank" onclick="openRankOverviewModal()" title="Cliquer pour voir la progression de rang E -> S" style="background: ${rankInfo.color}22; border-color: ${rankInfo.color}; cursor:pointer">
+                    <span class="quest-badge-icon" style="color:${rankInfo.color}">${rankInfo.badge_svg}</span>
+                    <div>
+                        <div class="quest-rank-level" style="color: ${rankInfo.color}">${qm.getText('rank')} ${rankInfo.rank} <i class="fas fa-external-link-alt" style="font-size:0.75rem; opacity:0.8"></i></div>
+                        <div class="quest-rank-title">${rankInfo.title}</div>
+                    </div>
+                </div>
+                <div class="quest-exp-display">
+                    <span class="quest-exp-number">${rankInfo.currentExp}</span> <span class="quest-exp-label">${qm.getText('expTotal')}</span>
+                </div>
+            </div>
+
+            <div class="quest-bar-wrapper">
+                <div class="quest-bar-track">
+                    <div class="quest-bar-fill" style="width: ${rankInfo.percent}%; background: linear-gradient(90deg, ${rankInfo.color}, #00f2fe);"></div>
+                </div>
+                <div class="quest-bar-labels">
+                    <span>${rankInfo.expInCurrentRank} / ${rankInfo.totalExpForRank} EXP ${qm.getText('towards')} [${rankInfo.nextRankTitle}]</span>
+                    <span style="font-weight:700; color:#00f2fe">${rankInfo.percent}%</span>
+                </div>
+            </div>
+
+            <!-- Tabs Quêtes -->
+            <div class="quest-tabs-nav">
+                <button class="quest-tab-btn ${activeTab === 'daily' ? 'active' : ''}" onclick="switchQuestTab('daily')">
+                    <i class="fas fa-calendar-day"></i> ${qm.getText('tabDaily')}
+                </button>
+                <button class="quest-tab-btn ${activeTab === 'weekly' ? 'active' : ''}" onclick="switchQuestTab('weekly')">
+                    <i class="fas fa-calendar-week"></i> ${qm.getText('tabWeekly')}
+                </button>
+                <button class="quest-tab-btn ${activeTab === 'monthly' ? 'active' : ''}" onclick="switchQuestTab('monthly')">
+                    <i class="fas fa-calendar-alt"></i> ${qm.getText('tabMonthly')}
+                </button>
+                <button class="quest-tab-btn ${activeTab === 'annual' ? 'active' : ''}" onclick="switchQuestTab('annual')">
+                    <i class="fas fa-award"></i> ${qm.getText('tabAnnual')}
+                </button>
+            </div>
+
+            <div class="quest-list">
+                ${quests.length === 0 ? `<p class="text-xs text-muted" style="padding:1rem;text-align:center">${qm.getText('noQuests')}</p>` : quests.map(q => {
+                    const canClaim = q.completed && !q.claimed;
+                    const isClaimed = q.claimed;
+
+                    return `
+                        <div class="quest-item-box ${isClaimed ? 'claimed' : canClaim ? 'can-claim' : ''}">
+                            <div class="quest-icon-bubble ${isClaimed ? 'done' : canClaim ? 'ready' : ''}">
+                                <i class="fas ${isClaimed ? 'fa-check-double' : canClaim ? 'fa-gift' : 'fa-scroll'}"></i>
+                            </div>
+                            <div class="quest-info-content">
+                                <div class="quest-name">${escapeHtml(q.title)} <span class="quest-reward">+${q.xp} EXP</span></div>
+                                <div class="quest-sub">${escapeHtml(q.description)}</div>
+                                <div class="quest-mini-bar-track">
+                                    <div class="quest-mini-bar-fill" style="width:${q.percent}%; background:${isClaimed ? '#2ecc71' : canClaim ? '#ffd32a' : 'var(--color-primary)'}"></div>
+                                </div>
+                            </div>
+                            <div class="quest-action-slot">
+                                ${canClaim ? `
+                                    <button class="btn-claim-quest" onclick="claimQuest('${q.id}', '${activeTab}')">
+                                        <i class="fas fa-bolt"></i> ${qm.getText('claimBtn')}
+                                    </button>
+                                ` : isClaimed ? `
+                                    <span class="quest-badge-claimed"><i class="fas fa-check"></i> ${qm.getText('claimed')}</span>
+                                ` : `
+                                    <div class="quest-status-count">${q.current} / ${q.targetValue}</div>
+                                `}
+                            </div>
+                        </div>
+                    `;
+                }).join('')}
+            </div>
+        </div>
+    `;
+}
+
+function claimQuest(questId, period) {
+    if (window.questManager) {
+        window.questManager.claimQuest(questId, period);
+    }
+}
+
+function switchQuestTab(tabKey) {
+    if (window.questManager) {
+        window.questManager.activeTab = tabKey;
+        renderQuestUI();
+    }
+}
+
+// ============ MODAL D'APERÇU DES RANGS & GUIDE EXP ============
+
+function openRankOverviewModal() {
+    const modal = document.getElementById('rankModal');
+    if (!modal) return;
+
+    const qm = window.questManager;
+    const rankInfo = qm.getCurrentRankInfo();
+    const ranks = qm.getRanks();
+
+    const ranksListContainer = document.getElementById('ranksHierarchyList');
+    if (ranksListContainer) {
+        ranksListContainer.innerHTML = ranks.map((r) => {
+            const isCurrent = r.rank === rankInfo.rank;
+            const isPassed = rankInfo.currentExp >= r.xp_required;
+            return `
+                <div class="rank-hierarchy-card ${isCurrent ? 'current-active' : isPassed ? 'unlocked' : 'locked'}" style="border-left: 4px solid ${r.color}">
+                    <div class="rank-card-header">
+                        <div style="display:flex; align-items:center; gap:0.75rem">
+                            <span class="rank-card-svg-badge" style="color:${r.color}">${r.badge_svg || ''}</span>
+                            <div>
+                                <h4 style="font-family:'Orbitron',sans-serif; font-size:1rem; color:${r.color}">${qm.getText('rank')} ${r.rank} : ${r.title}</h4>
+                                <span class="text-xs text-muted">${r.xp_required} ${qm.getText('expRequired')}</span>
+                            </div>
+                        </div>
+                        <div>
+                            ${isCurrent ? `<span class="badge-current-rank">${qm.getText('yourRank')}</span>` : isPassed ? '<i class="fas fa-check-circle" style="color:#2ecc71"></i>' : '<i class="fas fa-lock" style="color:#747d8c"></i>'}
+                        </div>
+                    </div>
+                </div>
+            `;
+        }).join('');
+    }
+
+    const currentRankTitleEl = document.getElementById('modalCurrentRankTitle');
+    if (currentRankTitleEl) {
+        currentRankTitleEl.innerHTML = `
+            <span style="color:${rankInfo.color}; font-weight:800">[${qm.getText('rank')} ${rankInfo.rank}]</span> ${rankInfo.title} (${rankInfo.currentExp} EXP)
+        `;
+    }
+
+    const nextRankAdviceEl = document.getElementById('modalNextRankAdvice');
+    if (nextRankAdviceEl) {
+        if (rankInfo.remainingExp > 0) {
+            nextRankAdviceEl.innerHTML = qm.getText('missingExp', { exp: rankInfo.remainingExp, title: rankInfo.nextRankTitle });
+        } else {
+            nextRankAdviceEl.textContent = qm.getText('maxRankCongrats');
+        }
+    }
+
+    const statusBoxHeader = modal.querySelector('.rank-modal-status-box p');
+    if (statusBoxHeader) statusBoxHeader.textContent = qm.getText('statusTitle');
+
+    const modalTitleEl = modal.querySelector('.modal-title');
+    if (modalTitleEl) modalTitleEl.innerHTML = `<i class="fas fa-crown" style="color:#ffd32a"></i> ${qm.getText('modalTitle')}`;
+
+    openModal('rankModal');
+}
+
+function launchRankConfetti() {
+    let canvas = document.getElementById('rankConfettiCanvas');
+    if (!canvas) {
+        canvas = document.createElement('canvas');
+        canvas.id = 'rankConfettiCanvas';
+        canvas.style.position = 'fixed';
+        canvas.style.top = '0';
+        canvas.style.left = '0';
+        canvas.style.width = '100vw';
+        canvas.style.height = '100vh';
+        canvas.style.pointerEvents = 'none';
+        canvas.style.zIndex = '99999';
+        document.body.appendChild(canvas);
+    }
+
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return;
+
+    const colors = ['#ffd32a', '#6c5ce7', '#00f2fe', '#e74c3c', '#2ecc71', '#ff9f43', '#54a0ff'];
+    const particles = [];
+    const count = 130;
+
+    for (let i = 0; i < count; i++) {
+        particles.push({
+            x: canvas.width / 2 + (Math.random() - 0.5) * 180,
+            y: canvas.height * 0.45 + (Math.random() - 0.5) * 50,
+            vx: (Math.random() - 0.5) * 16,
+            vy: Math.random() * -14 - 5,
+            size: Math.random() * 8 + 4,
+            color: colors[Math.floor(Math.random() * colors.length)],
+            rotation: Math.random() * 360,
+            vRot: (Math.random() - 0.5) * 12,
+            opacity: 1,
+            gravity: 0.38,
+            shape: Math.random() > 0.45 ? 'rect' : 'circle'
+        });
+    }
+
+    const startTime = Date.now();
+
+    function render() {
+        const elapsed = Date.now() - startTime;
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+        particles.forEach(p => {
+            p.x += p.vx;
+            p.y += p.vy;
+            p.vy += p.gravity;
+            p.vx *= 0.98;
+            p.rotation += p.vRot;
+            if (elapsed > 2000) {
+                p.opacity = Math.max(0, 1 - (elapsed - 2000) / 1200);
+            }
+
+            ctx.save();
+            ctx.globalAlpha = p.opacity;
+            ctx.translate(p.x, p.y);
+            ctx.rotate((p.rotation * Math.PI) / 180);
+            ctx.fillStyle = p.color;
+
+            if (p.shape === 'rect') {
+                ctx.fillRect(-p.size / 2, -p.size / 4, p.size, p.size / 2);
+            } else {
+                ctx.beginPath();
+                ctx.arc(0, 0, p.size / 2, 0, Math.PI * 2);
+                ctx.fill();
+            }
+            ctx.restore();
+        });
+
+        if (elapsed < 3500) {
+            requestAnimationFrame(render);
+        } else {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            canvas.remove();
+        }
+    }
+
+    render();
+}
+window.launchRankConfetti = launchRankConfetti;
+
+function escapeHtml(str) {
+    if (!str) return '';
+    return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+window.addEventListener('languageChanged', () => {
+    window.questManager?.loadQuestDefinitions();
+});
+
+console.log('[Quests v8.0.0] Multi-period System loaded');
+

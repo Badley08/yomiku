@@ -560,21 +560,16 @@ object SettingsDataScreen : SearchableSettings {
                         preference = syncPreferences.syncService(),
                         entries = persistentMapOf(
                             SyncManager.SyncService.NONE.value to stringResource(MR.strings.off),
-                            SyncManager.SyncService.SYNCYOMI.value to stringResource(SYMR.strings.syncyomi),
+                            SyncManager.SyncService.MANLORE.value to stringResource(KMR.strings.manlore_sync),
                             SyncManager.SyncService.GOOGLE_DRIVE.value to stringResource(SYMR.strings.google_drive),
-                            // KMK -->
-                            SyncManager.SyncService.WEB_DAV.value to stringResource(KMR.strings.web_dav),
-                            // KMK <--
                         ),
                         title = stringResource(SYMR.strings.pref_sync_service),
                         onValueChanged = {
-                            // KMK -->
                             if (it != SyncManager.SyncService.NONE.value) {
                                 SyncDataJob.setupTask(context)
                             } else {
                                 SyncDataJob.setupTask(context, prefInterval = 0)
                             }
-                            // KMK <--
                             true
                         },
                     ),
@@ -604,11 +599,8 @@ object SettingsDataScreen : SearchableSettings {
         val navigator = LocalNavigator.currentOrThrow
         val preferences = when (syncServiceType) {
             SyncManager.SyncService.NONE -> emptyList()
-            SyncManager.SyncService.SYNCYOMI -> getSelfHostPreferences(syncPreferences)
+            SyncManager.SyncService.MANLORE -> getManLorePreferences(syncPreferences)
             SyncManager.SyncService.GOOGLE_DRIVE -> getGoogleDrivePreferences()
-            // KMK -->
-            SyncManager.SyncService.WEB_DAV -> getWebDavPreferences(syncPreferences)
-            // KMK <--
         }
 
         return if (syncServiceType != SyncManager.SyncService.NONE) {
@@ -783,66 +775,16 @@ object SettingsDataScreen : SearchableSettings {
         )
     }
 
-    // KMK -->
     @Composable
-    private fun getWebDavPreferences(syncPreferences: SyncPreferences): List<Preference> {
-        val scope = rememberCoroutineScope()
-
+    private fun getManLorePreferences(syncPreferences: SyncPreferences): List<Preference> {
         return listOf(
-            Preference.PreferenceItem.EditTextPreference(
-                preference = syncPreferences.webDavUrl(),
-                title = stringResource(KMR.strings.pref_webdav_url),
-                subtitle = stringResource(KMR.strings.pref_webdav_url_summ),
-                onValueChanged = { newValue ->
-                    scope.launch {
-                        syncPreferences.webDavUrl().set(newValue.trim())
-                    }
-                    true
-                },
+            Preference.PreferenceItem.TextPreference(
+                title = stringResource(KMR.strings.manlore_sync),
+                subtitle = stringResource(KMR.strings.manlore_sync_summ),
             ),
-            Preference.PreferenceItem.EditTextPreference(
-                preference = syncPreferences.webDavUsername(),
-                title = stringResource(KMR.strings.pref_webdav_username),
-                subtitle = stringResource(KMR.strings.pref_webdav_username_summ),
-                onValueChanged = { newValue ->
-                    scope.launch {
-                        syncPreferences.webDavUsername().set(newValue.trim())
-                    }
-                    true
-                },
-            ),
-            run {
-                var dialogOpen by remember { mutableStateOf(false) }
-                if (dialogOpen) {
-                    PasswordDialog(
-                        onDismissRequest = { dialogOpen = false },
-                        onReturnPassword = { password ->
-                            dialogOpen = false
-                            scope.launch {
-                                syncPreferences.webDavPassword().set(password.replace("\n", ""))
-                            }
-                        },
-                        title = KMR.strings.pref_webdav_password,
-                    )
-                }
-                Preference.PreferenceItem.TextPreference(
-                    title = stringResource(KMR.strings.pref_webdav_password),
-                    subtitle = stringResource(KMR.strings.pref_webdav_password_summ),
-                    onClick = {
-                        dialogOpen = true
-                    },
-                )
-            },
-            Preference.PreferenceItem.EditTextPreference(
-                preference = syncPreferences.webDavFolder(),
-                title = stringResource(KMR.strings.pref_webdav_folder),
-                subtitle = stringResource(KMR.strings.pref_webdav_folder_summ),
-                onValueChanged = { newValue ->
-                    scope.launch {
-                        syncPreferences.webDavFolder().set(newValue.trim())
-                    }
-                    true
-                },
+            Preference.PreferenceItem.TextPreference(
+                title = stringResource(KMR.strings.db_migration_notice_title),
+                subtitle = stringResource(KMR.strings.db_migration_notice_summary),
             ),
         )
     }

@@ -98,6 +98,13 @@ class AboutScreen : Screen() {
 
                 item {
                     TextPreferenceWidget(
+                        title = stringResource(KMR.strings.yomiku_credits_title),
+                        subtitle = stringResource(KMR.strings.yomiku_credits_summary),
+                    )
+                }
+
+                item {
+                    TextPreferenceWidget(
                         title = stringResource(MR.strings.version),
                         subtitle = getVersionName(withBuildDate = true),
                         onPreferenceClick = {
@@ -261,11 +268,6 @@ class AboutScreen : Screen() {
                             label = stringResource(MR.strings.website),
                             icon = Icons.Outlined.Public,
                             url = "https://komikku-app.github.io",
-                        )
-                        LinkIcon(
-                            label = "Discord",
-                            icon = CustomIcons.Discord,
-                            url = "https://discord.gg/85jB7V5AJR",
                         )
                         // LinkIcon(
                         //     label = "X",

@@ -237,5 +237,11 @@
     <string name="pref_discord_show_download_button">Show Download Button</string>
     <string name="pref_discord_show_download_button_summary">Displays a button to download the app</string>
     <string name="pref_discord_show_discord_button">Show Discord Button</string>
-    <string name="pref_discord_show_discord_button_summary">Displays a button to join the Discord server</string>
+    <!-- Yomiku & ManLore -->
+    <string name="yomiku_credits_title">Crédits Yomiku</string>
+    <string name="yomiku_credits_summary">Grâce aux précieux contributeurs de Komikku &amp; Tachiyomi, l\'application Yomiku a pu voir le jour.</string>
+    <string name="db_migration_notice_title">Base de données mise à jour</string>
+    <string name="db_migration_notice_summary">L\'application utilise désormais une nouvelle base de données haute performance pour la synchronisation de vos lectures.</string>
+    <string name="manlore_sync">ManLore Sync</string>
+    <string name="manlore_sync_summ">Synchronisation cloud &amp; locale avec le Vault ManLore</string>
 </resources>

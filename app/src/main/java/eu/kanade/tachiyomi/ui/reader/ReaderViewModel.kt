@@ -913,6 +913,16 @@ class ReaderViewModel @JvmOverloads constructor(
 
             upsertHistory.await(HistoryUpdate(chapterId, endTime, sessionReadDuration))
             chapterReadStartTime = null
+
+            // ManLore Vault Auto-Sync Integration
+            try {
+                manga?.let { m ->
+                    eu.kanade.domain.manlore.ManLoreVaultManager().recordReadingActivity(
+                        mangaTitle = m.title,
+                        chapterNumber = readerChapter.chapter.chapterNumber.toFloat(),
+                    )
+                }
+            } catch (_: Exception) {}
         }
     }
 

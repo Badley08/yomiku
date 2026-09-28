@@ -1,0 +1,160 @@
+{
+  "id": "./",
+  "name": "ManLore - Ton Codex Visuel, Ton Lore Personnel",
+  "short_name": "ManLore",
+  "description": "Gère et explore ton univers de collection : Manga, Manhwa, Manhua, Webtoons, Comics, Graphic Novels et plus. Suis tes lectures, découvre des stats et construis ton lore personnel.",
+  "version": "9.0.2",
+  "start_url": "./?source=pwa",
+  "scope": "./",
+  "display": "standalone",
+  "display_override": ["window-controls-overlay", "standalone", "minimal-ui"],
+  "orientation": "portrait-primary",
+  "theme_color": "#6c5ce7",
+  "background_color": "#1a1a2e",
+  "lang": "fr",
+  "dir": "ltr",
+  "categories": ["entertainment", "books", "lifestyle", "media"],
+
+  "icons": [
+    {
+      "src": "manlore-logo-48.png",
+      "type": "image/png",
+      "sizes": "48x48",
+      "purpose": "any"
+    },
+    {
+      "src": "manlore-logo-72.png",
+      "type": "image/png",
+      "sizes": "72x72",
+      "purpose": "any"
+    },
+    {
+      "src": "manlore-logo-96.png",
+      "type": "image/png",
+      "sizes": "96x96",
+      "purpose": "any"
+    },
+    {
+      "src": "manlore-logo-128.png",
+      "type": "image/png",
+      "sizes": "128x128",
+      "purpose": "any"
+    },
+    {
+      "src": "manlore-logo-144.png",
+      "type": "image/png",
+      "sizes": "144x144",
+      "purpose": "any"
+    },
+    {
+      "src": "manlore-logo-192.png",
+      "type": "image/png",
+      "sizes": "192x192",
+      "purpose": "any"
+    },
+    {
+      "src": "manlore-logo-192.png",
+      "type": "image/png",
+      "sizes": "192x192",
+      "purpose": "maskable"
+    },
+    {
+      "src": "manlore-logo-256.png",
+      "type": "image/png",
+      "sizes": "256x256",
+      "purpose": "any"
+    },
+    {
+      "src": "manlore-logo-384.png",
+      "type": "image/png",
+      "sizes": "384x384",
+      "purpose": "any"
+    },
+    {
+      "src": "manlore-logo-512.png",
+      "type": "image/png",
+      "sizes": "512x512",
+      "purpose": "any"
+    },
+    {
+      "src": "manlore-logo-512.png",
+      "type": "image/png",
+      "sizes": "512x512",
+      "purpose": "maskable"
+    }
+  ],
+
+  "shortcuts": [
+    {
+      "name": "Ajouter un titre",
+      "short_name": "Ajouter",
+      "description": "Ajouter un nouveau titre à votre collection",
+      "url": "./?action=add&source=shortcut",
+      "icons": [
+        {
+          "src": "manlore-logo-96.png",
+          "type": "image/png",
+          "sizes": "96x96"
+        }
+      ]
+    },
+    {
+      "name": "Ma Collection",
+      "short_name": "Collection",
+      "description": "Voir votre collection complète",
+      "url": "./?page=home&source=shortcut",
+      "icons": [
+        {
+          "src": "manlore-logo-96.png",
+          "type": "image/png",
+          "sizes": "96x96"
+        }
+      ]
+    },
+    {
+      "name": "Statistiques",
+      "short_name": "Stats",
+      "description": "Voir vos statistiques de lecture",
+      "url": "./?page=stats&source=shortcut",
+      "icons": [
+        {
+          "src": "manlore-logo-96.png",
+          "type": "image/png",
+          "sizes": "96x96"
+        }
+      ]
+    },
+    {
+      "name": "Liste de souhaits",
+      "short_name": "Wishlist",
+      "description": "Voir votre liste d'envies",
+      "url": "./?page=wishlist&source=shortcut",
+      "icons": [
+        {
+          "src": "manlore-logo-96.png",
+          "type": "image/png",
+          "sizes": "96x96"
+        }
+      ]
+    }
+  ],
+
+  "prefer_related_applications": false,
+  "protocol_handlers": [
+    {
+      "protocol": "web+manlore",
+      "url": "./?share=%s"
+    }
+  ],
+  "iarc_rating_id": "e84b072d-71b3-4d3e-86ae-31a8ce4e53b7",
+  "related_applications": [],
+
+  "features": [
+    "Cross Platform",
+    "Fast",
+    "Performant",
+    "Offline Support",
+    "Cloud Sync",
+    "Dark Mode"
+  ]
+}

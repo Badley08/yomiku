@@ -47,6 +47,7 @@ import eu.kanade.tachiyomi.ui.history.HistoryTab
 import eu.kanade.tachiyomi.ui.library.LibraryTab
 import eu.kanade.tachiyomi.ui.libraryUpdateError.LibraryUpdateErrorScreen
 import eu.kanade.tachiyomi.ui.manga.MangaScreen
+import eu.kanade.tachiyomi.ui.manlore.ManLoreTab
 import eu.kanade.tachiyomi.ui.more.MoreTab
 import eu.kanade.tachiyomi.ui.updates.UpdatesTab
 import kotlinx.coroutines.channels.Channel
@@ -78,6 +79,7 @@ object HomeScreen : Screen() {
     private val TABS = listOf(
         LibraryTab,
         UpdatesTab,
+        ManLoreTab,
         HistoryTab,
         BrowseTab,
         MoreTab,

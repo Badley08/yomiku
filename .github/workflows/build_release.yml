@@ -91,11 +91,16 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Set up JDK
-        uses: actions/setup-java@1bcf9fb12cf4aa7d266a90ae39939e61372fe520 # v5.4.0
+      - name: Set up JDK 17 (LTS)
+        uses: actions/setup-java@v4
         with:
           java-version-file: .github/.java-version
           distribution: temurin
+
+      - name: Set up Node.js LTS (24.x)
+        uses: actions/setup-node@v4
+        with:
+          node-version: '24.x'
 
       - name: Write google-services.json
         uses: DamianReeves/write-file-action@6929a9a6d1807689191dcc8bbe62b54d70a32b42 # v1.3

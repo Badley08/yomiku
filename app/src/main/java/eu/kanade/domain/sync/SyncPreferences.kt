@@ -19,12 +19,9 @@ class SyncPreferences(
     fun syncInterval() = preferenceStore.getInt("sync_interval", 0)
     fun syncService() = preferenceStore.getInt("sync_service", 0)
 
-    // KMK -->
-    fun webDavUrl() = preferenceStore.getString("connection_webdav_url", "")
-    fun webDavUsername() = preferenceStore.getString("connection_webdav_username", "")
-    fun webDavPassword() = preferenceStore.getString("connection_webdav_password", "")
-    fun webDavFolder() = preferenceStore.getString("connection_webdav_folder", "komikku")
-    // KMK <--
+    // ManLore Sync (Turso DB)
+    fun manloreTursoUrl() = preferenceStore.getString("connection_manlore_turso_url", "libsql://manlore-badley08.aws-ap-northeast-1.turso.io")
+    fun manloreTursoToken() = preferenceStore.getString("connection_manlore_turso_token", "eyJhbGciOiJFZERTQSIsInR5cCI6IkpXVCJ9.eyJhIjoicnciLCJpYXQiOjE3OTA2MzMwNjgsImlkIjoiMDFhMGVhMGEtZGYwMS03MDViLWEzZWUtMTM2OTFhZjE3NzA3Iiwia2lkIjoiMUFUMUtsM2dHTFJaRnJrdmhVTjRPbEFub3B6Y0lHOWJwWTdQNUtZMnd4dyIsInJpZCI6IjExZWU5MzVlLWYwZDEtNDIxNi1iN2YzLTk2NjY2ODQ3ZWY0NyJ9.wBnJ-ak9GR5BIHL-ppMbRM7w-HQpPw4Gtdmsr657pBjUopgC4b6bZlNIJySQr80a6XW993lkoO7xLdSIr2sfBA")
 
     fun googleDriveAccessToken() = preferenceStore.getString(
         Preference.appStateKey("connection_google_drive_access_token"),

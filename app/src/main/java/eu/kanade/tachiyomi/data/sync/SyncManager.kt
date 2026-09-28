@@ -54,11 +54,8 @@ class SyncManager(
 
     enum class SyncService(val value: Int) {
         NONE(0),
-        SYNCYOMI(1),
+        MANLORE(1),
         GOOGLE_DRIVE(2),
-        // KMK -->
-        WEB_DAV(3),
-        // KMK <--
         ;
 
         companion object {
