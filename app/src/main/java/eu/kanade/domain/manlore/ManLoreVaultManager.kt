@@ -2,7 +2,7 @@ package eu.kanade.domain.manlore
 
 import eu.kanade.domain.sync.SyncPreferences
 import logcat.LogPriority
-import logcat.logcat
+import tachiyomi.core.common.util.system.logcat
 import uy.kohesive.injekt.Injekt
 import uy.kohesive.injekt.api.get
 

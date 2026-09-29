@@ -884,7 +884,7 @@ class ReaderViewModel @JvmOverloads constructor(
                 if (
                     !chapter.read &&
                     chapter.isRecognizedNumber &&
-                    chapter.chapterNumber == readerChapter.chapter.chapterNumber
+                    chapter.chapterNumber == readerChapter.chapter.chapter_number.toDouble()
                 ) {
                     ChapterUpdate(id = chapter.id, read = true)
                         // KMK -->
@@ -920,7 +920,7 @@ class ReaderViewModel @JvmOverloads constructor(
                 manga?.let { m ->
                     eu.kanade.domain.manlore.ManLoreVaultManager().recordReadingActivity(
                         mangaTitle = m.title,
-                        chapterNumber = readerChapter.chapter.chapterNumber.toFloat(),
+                        chapterNumber = readerChapter.chapter.chapter_number.toFloat(),
                     )
                 }
             } catch (_: Exception) {}
