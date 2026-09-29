@@ -144,6 +144,7 @@ class ReaderViewModel @JvmOverloads constructor(
     val state = mutableState.asStateFlow()
 
     private val eventChannel = Channel<Event>()
+    @Suppress("Unused")
     val eventFlow = eventChannel.receiveAsFlow()
 
     /**
