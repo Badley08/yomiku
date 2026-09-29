@@ -11,6 +11,7 @@ pluginManagement {
         gradlePluginPortal()
         google()
         mavenCentral()
+        maven(url = "https://jitpack.io")
         maven(url = "https://www.jitpack.io")
     }
 }
@@ -34,6 +35,7 @@ dependencyResolutionManagement {
     repositories {
         mavenCentral()
         google()
+        maven(url = "https://jitpack.io")
         maven(url = "https://www.jitpack.io")
     }
 }

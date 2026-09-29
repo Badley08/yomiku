@@ -42,7 +42,7 @@ jobs:
         uses: gradle/actions/setup-gradle@v3
 
       - name: Build app
-        run: ./gradlew assemblePreview -Penable-updater || ./gradlew assembleStandardRelease
+        run: ./gradlew assembleRelease -Penable-updater || ./gradlew assemblePreview
 
       - name: Sign APK (if key available)
         continue-on-error: true
