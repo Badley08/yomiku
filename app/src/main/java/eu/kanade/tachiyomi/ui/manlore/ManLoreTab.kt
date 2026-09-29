@@ -25,6 +25,7 @@ import cafe.adriel.voyager.navigator.tab.TabOptions
 import tachiyomi.presentation.core.components.material.Scaffold
 
 data object ManLoreTab : Tab {
+    @Suppress("UnusedPrivateMember")
     private fun readResolve(): Any = ManLoreTab
 
     override val options: TabOptions

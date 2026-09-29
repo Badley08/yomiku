@@ -582,7 +582,7 @@ object SettingsDataScreen : SearchableSettings {
     private fun getSyncServicePreferences(syncPreferences: SyncPreferences, syncService: Int): List<Preference> {
         val syncServiceType = SyncManager.SyncService.fromInt(syncService)
 
-        val basePreferences = getBasePreferences(syncServiceType, syncPreferences)
+        val basePreferences = getBasePreferences(syncServiceType)
 
         return if (syncServiceType != SyncManager.SyncService.NONE) {
             basePreferences + getAdditionalPreferences(syncPreferences)
@@ -594,12 +594,11 @@ object SettingsDataScreen : SearchableSettings {
     @Composable
     private fun getBasePreferences(
         syncServiceType: SyncManager.SyncService,
-        syncPreferences: SyncPreferences,
     ): List<Preference> {
         val navigator = LocalNavigator.currentOrThrow
         val preferences = when (syncServiceType) {
             SyncManager.SyncService.NONE -> emptyList()
-            SyncManager.SyncService.MANLORE -> getManLorePreferences(syncPreferences)
+            SyncManager.SyncService.MANLORE -> getManLorePreferences()
             SyncManager.SyncService.GOOGLE_DRIVE -> getGoogleDrivePreferences()
         }
 
@@ -711,72 +710,7 @@ object SettingsDataScreen : SearchableSettings {
     }
 
     @Composable
-    private fun getSelfHostPreferences(syncPreferences: SyncPreferences): List<Preference> {
-        val scope = rememberCoroutineScope()
-
-        val qrScanLauncher = rememberLauncherForActivityResult(ScanContract()) {
-            if (it.contents != null && it.contents.isNotEmpty()) {
-                syncPreferences.clientAPIKey().set(it.contents)
-            }
-        }
-        val context = LocalContext.current
-        val scanOptions = remember {
-            ScanOptions().apply {
-                setDesiredBarcodeFormats(ScanOptions.QR_CODE)
-                setOrientationLocked(false)
-                setPrompt(SYMR.strings.scan_qr_code.getString(context))
-                addExtra(Intents.Scan.SCAN_TYPE, Intents.Scan.MIXED_SCAN)
-            }
-        }
-
-        return listOf(
-            Preference.PreferenceItem.EditTextPreference(
-                preference = syncPreferences.clientHost(),
-                title = stringResource(SYMR.strings.pref_sync_host),
-                subtitle = stringResource(SYMR.strings.pref_sync_host_summ),
-                onValueChanged = { newValue ->
-                    scope.launch {
-                        // Trim spaces at the beginning and end, then remove trailing slash if present
-                        val trimmedValue = newValue.trim()
-                        val modifiedValue = trimmedValue.trimEnd { it == '/' }
-                        syncPreferences.clientHost().set(modifiedValue)
-                    }
-                    true
-                },
-            ),
-            Preference.PreferenceItem.CustomPreference(
-                title = stringResource(SYMR.strings.pref_sync_api_key),
-            ) {
-                val values by syncPreferences.clientAPIKey().collectAsState()
-                EditTextPreferenceWidget(
-                    title = stringResource(SYMR.strings.pref_sync_api_key),
-                    subtitle = stringResource(SYMR.strings.pref_sync_api_key_summ),
-                    onConfirm = {
-                        scope.launch {
-                            syncPreferences.clientAPIKey().set(it)
-                        }
-                        true
-                    },
-                    icon = null,
-                    value = values,
-                    widget = {
-                        IconButton(
-                            onClick = { qrScanLauncher.launch(scanOptions) },
-                            modifier = Modifier.padding(start = TrailingWidgetBuffer),
-                        ) {
-                            Icon(
-                                Icons.Filled.QrCodeScanner,
-                                contentDescription = stringResource(SYMR.strings.scan_qr_code),
-                            )
-                        }
-                    },
-                )
-            },
-        )
-    }
-
-    @Composable
-    private fun getManLorePreferences(syncPreferences: SyncPreferences): List<Preference> {
+    private fun getManLorePreferences(): List<Preference> {
         return listOf(
             Preference.PreferenceItem.TextPreference(
                 title = stringResource(KMR.strings.manlore_sync),
