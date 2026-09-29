@@ -27,7 +27,7 @@ class ManLoreVaultManager(
                 "ManLore Vault auto-save: $mangaTitle - Ch. $chapterNumber (Turso DB: $tursoUrl)"
             }
         } catch (e: Exception) {
-            logcat(LogPriority.ERROR, e) { "Failed to record reading activity to ManLore Vault" }
+            logcat(LogPriority.ERROR, throwable = e) { "Failed to record reading activity to ManLore Vault" }
         }
     }
 }
