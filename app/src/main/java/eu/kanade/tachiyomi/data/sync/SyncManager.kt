@@ -125,24 +125,14 @@ class SyncManager(
 
         // Handle sync based on the selected service
         val syncService = when (val syncService = SyncService.fromInt(syncPreferences.syncService().get())) {
-            SyncService.SYNCYOMI -> {
-                SyncYomiSyncService(
-                    context,
-                    json,
-                    syncPreferences,
-                    notifier,
-                )
+            SyncService.MANLORE -> {
+                // ManLore Vault handles chapter read sync via ManLoreVaultManager
+                null
             }
 
             SyncService.GOOGLE_DRIVE -> {
                 GoogleDriveSyncService(context, json, syncPreferences)
             }
-
-            // KMK -->
-            SyncService.WEB_DAV -> {
-                WebDavSyncService(context, json, syncPreferences, notifier)
-            }
-            // KMK <--
 
             else -> {
                 logcat(LogPriority.ERROR) { "Invalid sync service type: $syncService" }
