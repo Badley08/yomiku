@@ -13,8 +13,6 @@ import eu.kanade.tachiyomi.data.backup.restore.RestoreOptions
 import eu.kanade.tachiyomi.data.backup.restore.restorers.MangaRestorer
 import eu.kanade.tachiyomi.data.sync.service.GoogleDriveSyncService
 import eu.kanade.tachiyomi.data.sync.service.SyncData
-import eu.kanade.tachiyomi.data.sync.service.SyncYomiSyncService
-import eu.kanade.tachiyomi.data.sync.service.WebDavSyncService
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.protobuf.ProtoBuf
 import logcat.LogPriority

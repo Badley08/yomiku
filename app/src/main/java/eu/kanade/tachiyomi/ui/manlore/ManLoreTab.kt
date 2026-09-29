@@ -20,8 +20,8 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.rememberVectorPainter
 import androidx.compose.ui.viewinterop.AndroidView
-import cafe.adriel.voyager.navigator.tab.Tab
 import cafe.adriel.voyager.navigator.tab.TabOptions
+import eu.kanade.presentation.util.Tab
 import tachiyomi.presentation.core.components.material.Scaffold
 
 data object ManLoreTab : Tab {
