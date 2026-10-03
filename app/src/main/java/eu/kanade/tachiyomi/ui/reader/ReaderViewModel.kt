@@ -921,6 +921,7 @@ class ReaderViewModel @JvmOverloads constructor(
                     eu.kanade.domain.manlore.ManLoreVaultManager().recordReadingActivity(
                         mangaTitle = m.title,
                         chapterNumber = readerChapter.chapter.chapter_number.toFloat(),
+                        readDurationMs = sessionReadDuration,
                         description = m.description,
                         coverUrl = m.thumbnailUrl,
                         genres = m.genre,

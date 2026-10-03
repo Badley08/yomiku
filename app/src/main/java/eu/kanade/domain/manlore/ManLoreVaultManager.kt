@@ -28,6 +28,7 @@ class ManLoreVaultManager(
     fun recordReadingActivity(
         mangaTitle: String,
         chapterNumber: Float,
+        readDurationMs: Long = 0L,
         description: String? = null,
         coverUrl: String? = null,
         genres: List<String>? = null,
@@ -52,12 +53,24 @@ class ManLoreVaultManager(
                     put("id", "yomiku_" + System.currentTimeMillis())
                     put("type", "manga")
                     put("status", "reading")
+                    put("totalReadDurationMs", 0L)
                 }
             }
 
             item.put("title", mangaTitle)
             item.put("chapters", chapterNumber.toInt())
             item.put("chapterFloat", chapterNumber.toDouble())
+
+            // Accumulate read time — never overwrite, only add the current session
+            if (readDurationMs > 0L) {
+                val previous = item.optLong("totalReadDurationMs", 0L)
+                val accumulated = previous + readDurationMs
+                item.put("totalReadDurationMs", accumulated)
+                // Human-readable helpers (minutes and hours) for ManLore WebView display
+                item.put("totalReadMinutes", accumulated / 60_000)
+                item.put("totalReadHours", accumulated / 3_600_000)
+            }
+
             if (!description.isNullOrBlank()) {
                 item.put("description", description)
                 item.put("notes", description)
@@ -87,7 +100,8 @@ class ManLoreVaultManager(
 
             val tursoUrl = syncPreferences.manloreTursoUrl().get()
             logcat(LogPriority.INFO) {
-                "ManLore Vault auto-save: $mangaTitle - Ch. $chapterNumber (description: ${description?.length ?: 0} chars, Turso DB: $tursoUrl)"
+                val totalMin = item.optLong("totalReadMinutes", 0L)
+                "ManLore Vault: $mangaTitle Ch.$chapterNumber | session +${readDurationMs/1000}s | total ${totalMin}min | Turso=$tursoUrl"
             }
         } catch (e: Exception) {
             logcat(LogPriority.ERROR, e) { "Failed to record reading activity to ManLore Vault" }

@@ -1,4 +1,5 @@
 name: CI
+
 on:
   push:
     branches:
@@ -14,12 +15,12 @@ concurrency:
   cancel-in-progress: true
 
 permissions:
-  contents: read
+  contents: write
 
 jobs:
   build:
     name: Build app
-    runs-on: 'ubuntu-24.04'
+    runs-on: ubuntu-24.04
 
     steps:
       - name: Clone repo
@@ -38,15 +39,23 @@ jobs:
         with:
           node-version: '24.x'
 
-      - name: Set up gradle
+      - name: Set up Gradle
         uses: gradle/actions/setup-gradle@v3
 
-      - name: Build app
-        run: ./gradlew assembleRelease -Penable-updater || ./gradlew assemblePreview
+      - name: Write google-services.json
+        if: ${{ secrets.GOOGLE_SERVICES_JSON != '' }}
+        uses: DamianReeves/write-file-action@6929a9a6d1807689191dcc8bbe62b54d70a32b42 # v1.3
+        with:
+          path: app/google-services.json
+          contents: ${{ secrets.GOOGLE_SERVICES_JSON }}
+          write-mode: overwrite
 
-      - name: Sign APK (if key available)
-        continue-on-error: true
-        uses: r0adkll/sign-android-release@v1
+      - name: Build release APK
+        run: ./gradlew assembleRelease -Penable-updater
+
+      - name: Sign APK
+        id: sign_apk
+        uses: r0adkll/sign-android-release@f30bdd30588842ac76044ecdbd4b6d0e3e813478
         with:
           releaseDirectory: app/build/outputs/apk/release
           signingKeyBase64: ${{ secrets.SIGNING_KEY }}
@@ -56,7 +65,19 @@ jobs:
         env:
           BUILD_TOOLS_VERSION: '35.0.1'
 
-      - name: Prepare Output APK
+      - name: Verify APK signature
+        run: |
+          set -e
+          APK_FILE=$(find app/build/outputs/apk/release/ -name "*signed*.apk" | head -n 1)
+          if [ -z "$APK_FILE" ]; then
+            echo "ERROR: No signed APK was produced. Aborting."
+            exit 1
+          fi
+          echo "Verifying signature of: $APK_FILE"
+          "$ANDROID_HOME/build-tools/35.0.1/apksigner" verify --verbose "$APK_FILE"
+          echo "Signature OK."
+
+      - name: Rename APK
         id: current_commit
         run: |
           set -e
@@ -64,22 +85,30 @@ jobs:
           commit_count=$(git rev-list --count HEAD)
           echo "VERSION_TAG=$version_tag" >> $GITHUB_OUTPUT
           echo "COMMIT_COUNT=$commit_count" >> $GITHUB_OUTPUT
-          # Prefer signed APK if present, otherwise fallback to unsigned APK
+
+          # Strict: only accept a signed APK — no fallback to unsigned
           APK_FILE=$(find app/build/outputs/apk/release/ -name "*signed*.apk" | head -n 1)
           if [ -z "$APK_FILE" ]; then
-            APK_FILE=$(find app/build/outputs/apk/release/ -name "*.apk" | head -n 1)
+            echo "ERROR: No signed APK found after verification step."
+            exit 1
           fi
-          echo "Copying $APK_FILE to Yomiku-$version_tag-r$commit_count.apk"
-          cp "$APK_FILE" ./Yomiku-$version_tag-r$commit_count.apk
+
+          DEST="Yomiku-${version_tag}-r${commit_count}.apk"
+          cp "$APK_FILE" "./$DEST"
+          echo "APK_NAME=$DEST" >> $GITHUB_OUTPUT
+          echo "Output APK: $DEST"
 
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
-          name: Yomiku-${{ steps.current_commit.outputs.VERSION_TAG }}-r${{ steps.current_commit.outputs.COMMIT_COUNT }}
-          path: ./*.apk
+          name: ${{ steps.current_commit.outputs.APK_NAME }}
+          path: ./${{ steps.current_commit.outputs.APK_NAME }}
+          # Single file — no zip wrapping
+          if-no-files-found: error
 
       - name: Upload mapping
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        uses: actions/upload-artifact@v4
         with:
           name: mapping-${{ github.sha }}
           path: app/build/outputs/mapping/release
+          if-no-files-found: warn
