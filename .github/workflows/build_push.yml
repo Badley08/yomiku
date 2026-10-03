@@ -5,6 +5,8 @@ on:
     branches:
       - main
       - master
+    tags:
+      - 'v*'
     paths:
       - '**'
       - '!**.md'
@@ -77,42 +79,108 @@ jobs:
       - name: Verify APK signature
         run: |
           set -e
-          APK_FILE=$(find app/build/outputs/apk/release/ -name "*signed*.apk" | head -n 1)
-          if [ -z "$APK_FILE" ]; then
-            echo "ERROR: No signed APK was produced. Aborting."
+          echo "Verifying signatures of all signed release APKs..."
+          found=0
+          for apk in app/build/outputs/apk/release/*-signed.apk; do
+            [ -f "$apk" ] || continue
+            found=1
+            echo "Verifying signature of: $apk"
+            "$ANDROID_HOME/build-tools/35.0.1/apksigner" verify --verbose "$apk"
+          done
+          if [ "$found" -eq 0 ]; then
+            echo "ERROR: No signed APK found to verify."
             exit 1
           fi
-          echo "Verifying signature of: $APK_FILE"
-          "$ANDROID_HOME/build-tools/35.0.1/apksigner" verify --verbose "$APK_FILE"
-          echo "Signature OK."
+          echo "All signed APK signatures verified successfully."
 
-      - name: Rename APK
-        id: current_commit
+      - name: Prepare release artifacts
+        id: prepare_release
         run: |
           set -e
-          version_tag=$(echo ${GITHUB_REF/refs\/heads\//} | sed -r 's/^refs\/(heads|tags)\///' | sed -r 's/[-\/]+/_/g')
+          mkdir -p dist
           commit_count=$(git rev-list --count HEAD)
-          echo "VERSION_TAG=$version_tag" >> $GITHUB_OUTPUT
-          echo "COMMIT_COUNT=$commit_count" >> $GITHUB_OUTPUT
+          commit_sha=$(git rev-parse --short HEAD)
 
-          # Strict: only accept a signed APK — no fallback to unsigned
-          APK_FILE=$(find app/build/outputs/apk/release/ -name "*signed*.apk" | head -n 1)
-          if [ -z "$APK_FILE" ]; then
-            echo "ERROR: No signed APK found after verification step."
-            exit 1
+          if [[ "$GITHUB_REF" == refs/tags/* ]]; then
+            TAG_NAME="${GITHUB_REF_NAME}"
+            RELEASE_TITLE="Yomiku ${TAG_NAME}"
+          else
+            TAG_NAME="v1.14.1-r${commit_count}"
+            RELEASE_TITLE="Yomiku v1.14.1 (r${commit_count})"
           fi
 
-          DEST="Yomiku-${version_tag}-r${commit_count}.apk"
-          cp "$APK_FILE" "./$DEST"
-          echo "APK_NAME=$DEST" >> $GITHUB_OUTPUT
-          echo "Output APK: $DEST"
+          echo "TAG_NAME=$TAG_NAME" >> $GITHUB_OUTPUT
+          echo "RELEASE_TITLE=$RELEASE_TITLE" >> $GITHUB_OUTPUT
+          echo "COMMIT_COUNT=$commit_count" >> $GITHUB_OUTPUT
+          echo "COMMIT_SHA=$commit_sha" >> $GITHUB_OUTPUT
 
-      - name: Upload APK
+          # Copy ARM APKs with clean, direct filenames
+          if [ -f "app/build/outputs/apk/release/app-arm64-v8a-release-unsigned-signed.apk" ]; then
+            cp "app/build/outputs/apk/release/app-arm64-v8a-release-unsigned-signed.apk" "dist/Yomiku-arm64-v8a.apk"
+          fi
+          if [ -f "app/build/outputs/apk/release/app-armeabi-v7a-release-unsigned-signed.apk" ]; then
+            cp "app/build/outputs/apk/release/app-armeabi-v7a-release-unsigned-signed.apk" "dist/Yomiku-armeabi-v7a.apk"
+          fi
+          if [ -f "app/build/outputs/apk/release/app-universal-release-unsigned-signed.apk" ]; then
+            cp "app/build/outputs/apk/release/app-universal-release-unsigned-signed.apk" "dist/Yomiku-universal.apk"
+          fi
+
+          cat << 'EOF' | sed 's/^          //' > dist/release_notes.md
+          ## 🚀 Yomiku Release
+
+          ### 📱 Fichiers APK (Téléchargement direct)
+
+          Téléchargez et installez directement l'application sur votre appareil Android (aucun fichier zip à extraire) :
+
+          | Fichier APK | Architecture | Appareils recommandés |
+          |---|---|---|
+          | **`Yomiku-arm64-v8a.apk`** | ARM 64-bit (`arm64-v8a`) | **Recommandé** pour la quasi-totalité des smartphones récents (64-bit) |
+          | **`Yomiku-armeabi-v7a.apk`** | ARM 32-bit (`armeabi-v7a`) | Anciens appareils Android (32-bit) |
+          | **`Yomiku-universal.apk`** | Universel (ARMv7 + ARMv8) | Compatible avec tous les téléphones et tablettes Android |
+
+          ---
+
+          ### ✨ Nouveautés & Optimisations
+          - **Architectures 100% ARM** : Binaires optimisés pour processeurs mobiles ARMv7 et ARMv8 (librairies x86/x86_64 exclues pour un fichier léger et rapide).
+          - **Identité Visuelle Yomiku** : Nouveau logo vectoriel Hiragana japonais « よ » Bleu Ciel Pâle.
+          - **Temps de Lecture & Statistiques** : Bascule dynamique entre affichage en Heures ou en Jours + Minutes avec persistance.
+          - **Synchronisation ManLore** : Exportation directe des métadonnées UI/UX et temps de lecture.
+          - **Sécurité Renforcée** : Service worker hermétique et zéro avertissement de compilation Kotlin 2.4.
+          - **Signature Officielle de Production** : APK signé avec keystore officiel (installation directe sans avertissement de package corrompu).
+
+          ---
+          *Compilé automatiquement par GitHub Actions sur la branche `main`.*
+          EOF
+
+          echo "APKs in dist/:"
+          ls -la dist/
+
+      - name: Publish GitHub Release
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -e
+          TAG_NAME="${{ steps.prepare_release.outputs.TAG_NAME }}"
+          RELEASE_TITLE="${{ steps.prepare_release.outputs.RELEASE_TITLE }}"
+
+          echo "Publishing GitHub Release: $TAG_NAME ($RELEASE_TITLE)..."
+          if gh release view "$TAG_NAME" >/dev/null 2>&1; then
+            echo "Release $TAG_NAME already exists, updating assets..."
+            gh release upload "$TAG_NAME" dist/Yomiku-*.apk --clobber
+            gh release edit "$TAG_NAME" --title "$RELEASE_TITLE" --notes-file dist/release_notes.md --latest
+          else
+            gh release create "$TAG_NAME" dist/Yomiku-*.apk \
+              --title "$RELEASE_TITLE" \
+              --notes-file dist/release_notes.md \
+              --latest
+          fi
+          echo "GitHub Release published successfully!"
+
+      - name: Upload APKs to workflow artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: ${{ steps.current_commit.outputs.APK_NAME }}
-          path: ./${{ steps.current_commit.outputs.APK_NAME }}
-          # Single file — no zip wrapping
+          name: Yomiku-APKs-${{ steps.prepare_release.outputs.COMMIT_COUNT }}
+          path: dist/Yomiku-*.apk
           if-no-files-found: error
 
       - name: Upload mapping

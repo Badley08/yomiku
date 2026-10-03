@@ -43,23 +43,21 @@ The name **Yomiku** (読む, *yomu*) means "to read" in Japanese.
 ## Requirements
 
 - Android 7.0 (API 24) or higher
-- ARM64-v8a / ARMv7 / x86 / x86_64 architecture
+- ARM64-v8a / ARMv7 architecture
 
 ---
 
 ## Installation
 
-Download the latest APK from the [Releases](https://github.com/Badley08/yomiku/releases/latest) page.
+Download the latest APK directly from the [Releases](https://github.com/Badley08/yomiku/releases/latest) page (direct `.apk` download, no zip extraction needed).
 
-> If unsure which variant to pick, download `Yomiku-<version>.apk` (universal).
+> If unsure which variant to pick, download `Yomiku-arm64-v8a.apk` (modern phones) or `Yomiku-universal.apk`.
 
-| Variant | Architecture |
-|---|---|
-| `Yomiku-<version>.apk` | Universal (all devices) |
-| `Yomiku-arm64-v8a-<version>.apk` | Modern 64-bit ARM |
-| `Yomiku-armeabi-v7a-<version>.apk` | Legacy 32-bit ARM |
-| `Yomiku-x86-<version>.apk` | x86 (32-bit) |
-| `Yomiku-x86_64-<version>.apk` | x86 (64-bit) |
+| Variant | Architecture | Devices |
+|---|---|---|
+| `Yomiku-arm64-v8a.apk` | ARM 64-bit (`arm64-v8a`) | Modern smartphones (Recommended) |
+| `Yomiku-armeabi-v7a.apk` | ARM 32-bit (`armeabi-v7a`) | Legacy 32-bit devices |
+| `Yomiku-universal.apk` | Universal (ARMv7 + ARMv8) | All Android devices |
 
 ---
 
