@@ -2,6 +2,7 @@ package eu.kanade.tachiyomi.ui.manlore
 
 import android.annotation.SuppressLint
 import android.graphics.Bitmap
+import android.webkit.JavascriptInterface
 import android.webkit.WebSettings
 import android.webkit.WebView
 import android.webkit.WebViewClient
@@ -21,8 +22,18 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.rememberVectorPainter
 import androidx.compose.ui.viewinterop.AndroidView
 import cafe.adriel.voyager.navigator.tab.TabOptions
+import eu.kanade.domain.manlore.ManLoreVaultManager
 import eu.kanade.presentation.util.Tab
 import tachiyomi.presentation.core.components.material.Scaffold
+import java.util.Locale
+
+class YomikuWebBridge(private val vaultManager: ManLoreVaultManager = ManLoreVaultManager()) {
+    @JavascriptInterface
+    fun getVaultEntriesJson(): String = vaultManager.getVaultEntriesAsJson()
+
+    @JavascriptInterface
+    fun getDeviceLanguage(): String = Locale.getDefault().language
+}
 
 data object ManLoreTab : Tab {
     @Suppress("UnusedPrivateMember")
@@ -64,6 +75,7 @@ data object ManLoreTab : Tab {
                                 allowContentAccess = true
                                 mixedContentMode = WebSettings.MIXED_CONTENT_ALWAYS_ALLOW
                             }
+                            addJavascriptInterface(YomikuWebBridge(), "YomikuBridge")
                             webViewClient = object : WebViewClient() {
                                 override fun onPageStarted(view: WebView?, url: String?, favicon: Bitmap?) {
                                     super.onPageStarted(view, url, favicon)
@@ -73,6 +85,18 @@ data object ManLoreTab : Tab {
                                 override fun onPageFinished(view: WebView?, url: String?) {
                                     super.onPageFinished(view, url)
                                     isLoading = false
+                                    view?.evaluateJavascript(
+                                        """
+                                        (function() {
+                                            try {
+                                                if (window.YomikuBridge && typeof window.syncFromYomikuUI === 'function') {
+                                                    window.syncFromYomikuUI(window.YomikuBridge.getVaultEntriesJson());
+                                                }
+                                            } catch(e) { console.error('YomikuBridge error', e); }
+                                        })();
+                                        """.trimIndent(),
+                                        null,
+                                    )
                                 }
                             }
                             loadUrl("file:///android_asset/manlore/index.html")

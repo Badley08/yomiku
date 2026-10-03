@@ -915,12 +915,17 @@ class ReaderViewModel @JvmOverloads constructor(
             upsertHistory.await(HistoryUpdate(chapterId, endTime, sessionReadDuration))
             chapterReadStartTime = null
 
-            // ManLore Vault Auto-Sync Integration
+            // ManLore Vault Auto-Sync Integration directly from UI/UX (no AniList fetch)
             try {
                 manga?.let { m ->
                     eu.kanade.domain.manlore.ManLoreVaultManager().recordReadingActivity(
                         mangaTitle = m.title,
                         chapterNumber = readerChapter.chapter.chapter_number.toFloat(),
+                        description = m.description,
+                        coverUrl = m.thumbnailUrl,
+                        genres = m.genre,
+                        author = m.author,
+                        artist = m.artist,
                     )
                 }
             } catch (_: Exception) {}

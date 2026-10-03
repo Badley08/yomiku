@@ -1,5 +1,6 @@
 package eu.kanade.presentation.more.stats.components
 
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.RowScope
@@ -23,6 +24,7 @@ fun RowScope.StatsOverviewItem(
     title: String,
     subtitle: String,
     icon: ImageVector,
+    onClick: (() -> Unit)? = null,
 ) {
     BaseStatsItem(
         title = title,
@@ -30,6 +32,7 @@ fun RowScope.StatsOverviewItem(
         subtitle = subtitle,
         subtitleStyle = MaterialTheme.typography.bodyMedium,
         icon = icon,
+        onClick = onClick,
     )
 }
 
@@ -53,11 +56,19 @@ private fun RowScope.BaseStatsItem(
     subtitle: String,
     subtitleStyle: TextStyle,
     icon: ImageVector? = null,
+    onClick: (() -> Unit)? = null,
 ) {
     Column(
         modifier = Modifier
             .weight(1f)
-            .fillMaxHeight(),
+            .fillMaxHeight()
+            .then(
+                if (onClick != null) {
+                    Modifier.clickable(onClick = onClick)
+                } else {
+                    Modifier
+                },
+            ),
         verticalArrangement = Arrangement.spacedBy(MaterialTheme.padding.small),
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {

@@ -12,14 +12,18 @@ import androidx.compose.material.icons.outlined.CollectionsBookmark
 import androidx.compose.material.icons.outlined.LocalLibrary
 import androidx.compose.material.icons.outlined.Schedule
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import eu.kanade.presentation.more.stats.components.StatsItem
 import eu.kanade.presentation.more.stats.components.StatsOverviewItem
 import eu.kanade.presentation.more.stats.data.StatsData
 import eu.kanade.presentation.util.toDurationString
+import eu.kanade.presentation.util.toHoursDurationString
 import tachiyomi.i18n.MR
 import tachiyomi.presentation.core.components.SectionCard
 import tachiyomi.presentation.core.components.material.padding
@@ -58,10 +62,14 @@ private fun LazyItemScope.OverviewSection(
 ) {
     val none = stringResource(MR.strings.none)
     val context = LocalContext.current
-    val readDurationString = remember(data.totalReadDuration) {
-        data.totalReadDuration
-            .toDuration(DurationUnit.MILLISECONDS)
-            .toDurationString(context, fallback = none)
+    var showHoursOnly by rememberSaveable { mutableStateOf(false) }
+    val readDurationString = remember(data.totalReadDuration, showHoursOnly) {
+        val duration = data.totalReadDuration.toDuration(DurationUnit.MILLISECONDS)
+        if (showHoursOnly) {
+            duration.toHoursDurationString(context, fallback = none)
+        } else {
+            duration.toDurationString(context, fallback = none)
+        }
     }
     SectionCard(MR.strings.label_overview_section) {
         Row(
@@ -76,6 +84,7 @@ private fun LazyItemScope.OverviewSection(
                 title = readDurationString,
                 subtitle = stringResource(MR.strings.label_read_duration),
                 icon = Icons.Outlined.Schedule,
+                onClick = { showHoursOnly = !showHoursOnly },
             )
             StatsOverviewItem(
                 title = data.completedMangaCount.toString(),

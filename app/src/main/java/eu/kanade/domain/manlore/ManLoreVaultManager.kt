@@ -1,29 +1,119 @@
 package eu.kanade.domain.manlore
 
+import android.app.Application
+import android.content.Context
 import eu.kanade.domain.sync.SyncPreferences
 import logcat.LogPriority
+import org.json.JSONArray
+import org.json.JSONObject
 import tachiyomi.core.common.util.system.logcat
 import uy.kohesive.injekt.Injekt
 import uy.kohesive.injekt.api.get
+import java.io.File
 
 /**
  * ManLore Vault Manager for Yomiku.
- * Handles local & Turso Cloud vault synchronization of manga reading progression.
+ * Directly records title, description, cover, and genres from Yomiku UI/UX
+ * into the ManLore Vault without external AniList/tracker fetches.
  */
 class ManLoreVaultManager(
     private val syncPreferences: SyncPreferences = Injekt.get(),
+    private val context: Context = Injekt.get<Application>(),
 ) {
+    private val vaultFile = File(context.filesDir, "manlore_vault_entries.json")
+
     /**
-     * Automatically records reading activity into ManLore Vault.
+     * Automatically records reading activity and full metadata directly from UI/UX into ManLore Vault.
      */
-    fun recordReadingActivity(mangaTitle: String, chapterNumber: Float) {
+    fun recordReadingActivity(
+        mangaTitle: String,
+        chapterNumber: Float,
+        description: String? = null,
+        coverUrl: String? = null,
+        genres: List<String>? = null,
+        author: String? = null,
+        artist: String? = null,
+    ) {
         try {
+            val entries = loadEntries()
+            var existingIndex: Int? = null
+            for (i in 0 until entries.length()) {
+                val item = entries.getJSONObject(i)
+                if (item.optString("title").equals(mangaTitle, ignoreCase = true)) {
+                    existingIndex = i
+                    break
+                }
+            }
+
+            val item = if (existingIndex != null) {
+                entries.getJSONObject(existingIndex)
+            } else {
+                JSONObject().apply {
+                    put("id", "yomiku_" + System.currentTimeMillis())
+                    put("type", "manga")
+                    put("status", "reading")
+                }
+            }
+
+            item.put("title", mangaTitle)
+            item.put("chapters", chapterNumber.toInt())
+            item.put("chapterFloat", chapterNumber.toDouble())
+            if (!description.isNullOrBlank()) {
+                item.put("description", description)
+                item.put("notes", description)
+            }
+            if (!coverUrl.isNullOrBlank()) {
+                item.put("image", coverUrl)
+                item.put("imageUrl", coverUrl)
+            }
+            if (!author.isNullOrBlank()) {
+                item.put("author", author)
+            }
+            if (!artist.isNullOrBlank()) {
+                item.put("artist", artist)
+            }
+            if (!genres.isNullOrEmpty()) {
+                item.put("genres", JSONArray(genres))
+            }
+            item.put("updatedAt", System.currentTimeMillis())
+
+            if (existingIndex != null) {
+                entries.put(existingIndex, item)
+            } else {
+                entries.put(item)
+            }
+
+            vaultFile.writeText(entries.toString())
+
             val tursoUrl = syncPreferences.manloreTursoUrl().get()
             logcat(LogPriority.INFO) {
-                "ManLore Vault auto-save: $mangaTitle - Ch. $chapterNumber (Turso DB: $tursoUrl)"
+                "ManLore Vault auto-save: $mangaTitle - Ch. $chapterNumber (description: ${description?.length ?: 0} chars, Turso DB: $tursoUrl)"
             }
         } catch (e: Exception) {
             logcat(LogPriority.ERROR, e) { "Failed to record reading activity to ManLore Vault" }
+        }
+    }
+
+    /**
+     * Exposes all saved UI/UX manga entries as a JSON string for the ManLore WebView.
+     */
+    fun getVaultEntriesAsJson(): String {
+        return try {
+            if (vaultFile.exists()) vaultFile.readText() else "[]"
+        } catch (_: Exception) {
+            "[]"
+        }
+    }
+
+    private fun loadEntries(): JSONArray {
+        return try {
+            if (vaultFile.exists()) {
+                JSONArray(vaultFile.readText())
+            } else {
+                JSONArray()
+            }
+        } catch (_: Exception) {
+            JSONArray()
         }
     }
 }
