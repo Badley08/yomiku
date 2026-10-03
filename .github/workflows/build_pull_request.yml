@@ -1,10 +1,6 @@
-name: PR build check
+name: PR Build Check
+
 on:
-  #  push:
-  #    branches:
-  #      - develop
-  #    paths-ignore:
-  #      - '**.md'
   pull_request:
     paths:
       - '**'
@@ -13,24 +9,25 @@ on:
       - '!i18n-kmk/src/commonMain/moko-resources/**/plurals.xml'
       - 'i18n-kmk/src/commonMain/moko-resources/base/strings.xml'
       - 'i18n-kmk/src/commonMain/moko-resources/base/plurals.xml'
-  # Dispatch or Manual triggers
   workflow_dispatch:
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.event.pull_request.number }}
   cancel-in-progress: true
 
+# Minimal permissions — fixes actions/missing-workflow-permissions
 permissions:
   contents: read
+  pull-requests: read
 
 jobs:
   build:
     name: Build app
-    runs-on: 'ubuntu-24.04'
+    runs-on: ubuntu-24.04
 
     steps:
       - name: Clone repo
-        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v4
         with:
           fetch-depth: 0
 
@@ -40,7 +37,7 @@ jobs:
       - name: Validate Gradle Wrapper
         uses: gradle/actions/wrapper-validation@3f131e8634966bd73d06cc69884922b02e6faf92 # v6.2.0
 
-      - name: Set up JDK
+      - name: Set up JDK 17
         uses: actions/setup-java@1bcf9fb12cf4aa7d266a90ae39939e61372fe520 # v5.4.0
         with:
           java-version-file: .github/.java-version
@@ -62,17 +59,17 @@ jobs:
           contents: ${{ secrets.GOOGLE_CLIENT_SECRETS_JSON }}
           write-mode: overwrite
 
-      - name: Set up gradle
+      - name: Set up Gradle
         uses: gradle/actions/setup-gradle@3f131e8634966bd73d06cc69884922b02e6faf92 # v6
 
       - name: Check code format
         run: ./gradlew spotlessCheck
 
-      - name: Build app
+      - name: Build app (internal PR)
         if: github.repository == github.event.pull_request.head.repo.full_name
         run: ./gradlew assemblePreview -Pinclude-telemetry -Penable-updater
 
-      - name: Build app
+      - name: Build app (external PR / fork)
         if: github.repository != github.event.pull_request.head.repo.full_name
         run: ./gradlew assemblePreview
 
@@ -80,7 +77,7 @@ jobs:
         id: unit_tests
         run: ./gradlew testReleaseUnitTest
 
-      - name: Upload test report
+      - name: Upload test report on failure
         if: steps.unit_tests.outcome == 'failure'
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
@@ -99,29 +96,23 @@ jobs:
         env:
           BUILD_TOOLS_VERSION: '35.0.1'
 
-      - name: Signed File name
-        id: signed_filename
-        if: github.repository == github.event.pull_request.head.repo.full_name
-        run: |
-          echo "SIGNED_TRAIL=-signed" >> $GITHUB_OUTPUT
-
-      - name: Rename apk
+      - name: Rename APK
         id: current_commit
         run: |
           set -e
-          echo "The git ref is: ${{ github.ref }}"
           version_tag=p$(echo ${{ github.ref }} | cut -d '/' -f 3)
           commit_count=$(git rev-list --count HEAD)
-          echo "VERSION_TAG=$version_tag"
+          signed=""
+          [ -f "app/build/outputs/apk/preview/app-universal-preview-signed.apk" ] && signed="-signed"
+          mv "app/build/outputs/apk/preview/app-universal-preview${signed}.apk" \
+             "Yomiku-${version_tag}-r${commit_count}.apk" 2>/dev/null || true
           echo "VERSION_TAG=$version_tag" >> $GITHUB_OUTPUT
-          echo "COMMIT_COUNT=$commit_count"
           echo "COMMIT_COUNT=$commit_count" >> $GITHUB_OUTPUT
-          mv app/build/outputs/apk/preview/app-universal-preview${{ steps.signed_filename.outputs.SIGNED_TRAIL }}.apk Komikku-$version_tag-r$commit_count.apk
 
       - name: Upload APK
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
-          name: Komikku-${{ steps.current_commit.outputs.VERSION_TAG }}-r${{ steps.current_commit.outputs.COMMIT_COUNT }}.apk
+          name: Yomiku-${{ steps.current_commit.outputs.VERSION_TAG }}-r${{ steps.current_commit.outputs.COMMIT_COUNT }}
           path: ./*.apk
 
       - name: Upload mapping

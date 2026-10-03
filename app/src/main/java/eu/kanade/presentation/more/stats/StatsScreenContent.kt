@@ -1,5 +1,6 @@
 package eu.kanade.presentation.more.stats
 
+import androidx.compose.runtime.Composable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.PaddingValues
