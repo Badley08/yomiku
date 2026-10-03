@@ -1667,3 +1667,78 @@ async function sendServerAnnouncementNotification(payload) {
 window.sendServerAnnouncementNotification = sendServerAnnouncementNotification;
 
 
+
+
+// ============ SYNCHRONISATION DIRECTE DEPUIS L'UI/UX YOMIKU ============
+// Recupere les metadonnees (titres, descriptions, couvertures, chapitres, genres)
+// directement depuis l'UI/UX locale de Yomiku sans passer par AniList/MAL.
+window.syncFromYomikuUI = function(jsonStr) {
+    if (!jsonStr) return;
+    try {
+        const entries = typeof jsonStr === 'string' ? JSON.parse(jsonStr) : jsonStr;
+        if (!Array.isArray(entries) || entries.length === 0) return;
+        const currentItems = loadFromLocalStorage();
+        let changed = false;
+
+        entries.forEach(entry => {
+            if (!entry || !entry.title) return;
+            const normTitle = normalizeTitle(entry.title);
+            const idx = currentItems.findIndex(i => normalizeTitle(i.title) === normTitle);
+
+            if (idx >= 0) {
+                const existing = currentItems[idx];
+                if (entry.description && (!existing.notes || existing.notes.length < entry.description.length)) {
+                    existing.notes = entry.description;
+                    changed = true;
+                }
+                if (entry.image && !existing.image) {
+                    existing.image = entry.image;
+                    existing.imageUrl = entry.image;
+                    changed = true;
+                }
+                if (entry.chapters && Number(entry.chapters) > (Number(existing.chapters) || 0)) {
+                    existing.chapters = Number(entry.chapters);
+                    changed = true;
+                }
+                if (Array.isArray(entry.genres) && entry.genres.length > 0 && (!existing.genres || existing.genres.length === 0)) {
+                    existing.genres = entry.genres;
+                    changed = true;
+                }
+                if (entry.author && !existing.author) {
+                    existing.author = entry.author;
+                    changed = true;
+                }
+            } else {
+                currentItems.unshift({
+                    id: entry.id || ('yomiku_' + Date.now() + '_' + Math.random().toString(36).substr(2, 5)),
+                    title: entry.title,
+                    type: entry.type || 'manga',
+                    status: entry.status || 'reading',
+                    rating: 0,
+                    genres: entry.genres || [],
+                    link: '',
+                    image: entry.image || '',
+                    imageUrl: entry.image || '',
+                    chapters: Number(entry.chapters) || 0,
+                    notes: entry.description || '',
+                    author: entry.author || '',
+                    artist: entry.artist || '',
+                    createdAt: new Date().toISOString(),
+                    updatedAt: new Date().toISOString()
+                });
+                changed = true;
+            }
+        });
+
+        if (changed) {
+            localStorage.setItem(getUserItemsStorageKey(), JSON.stringify(currentItems));
+            if (typeof window.renderItems === 'function') {
+                window.renderItems(currentItems);
+            } else if (typeof window.loadItems === 'function') {
+                window.loadItems();
+            }
+        }
+    } catch(err) {
+        console.error('[Yomiku] Failed to sync from Yomiku UI/UX:', err);
+    }
+};

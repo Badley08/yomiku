@@ -16,14 +16,24 @@ fun Duration.toDurationString(context: Context, fallback: String): String {
         buildList(4) {
             if (days != 0L) add(context.stringResource(MR.strings.day_short, days))
             if (hours != 0) add(context.stringResource(MR.strings.hour_short, hours))
-            if (minutes != 0 && (days == 0L || hours == 0)) {
-                add(
-                    context.stringResource(MR.strings.minute_short, minutes),
-                )
+            if (minutes != 0 || (days == 0L && hours == 0 && seconds == 0)) {
+                if (minutes != 0) {
+                    add(context.stringResource(MR.strings.minute_short, minutes))
+                }
             }
             if (seconds != 0 && days == 0L && hours == 0) add(context.stringResource(MR.strings.seconds_short, seconds))
         }.joinToString(" ").ifBlank { fallback }
     }
+}
+
+fun Duration.toHoursDurationString(context: Context, fallback: String): String {
+    val totalHours = inWholeHours
+    val remMinutes = (inWholeMinutes % 60).toInt()
+    if (totalHours == 0L && remMinutes == 0) return fallback
+    return buildList(2) {
+        if (totalHours != 0L) add(context.stringResource(MR.strings.hour_short, totalHours))
+        if (remMinutes != 0 || totalHours == 0L) add(context.stringResource(MR.strings.minute_short, remMinutes))
+    }.joinToString(" ").ifBlank { fallback }
 }
 
 @Composable
