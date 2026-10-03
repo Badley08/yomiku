@@ -43,7 +43,7 @@ jobs:
         uses: gradle/actions/setup-gradle@v3
 
       - name: Write google-services.json
-        if: ${{ secrets.GOOGLE_SERVICES_JSON != '' }}
+        if: secrets.GOOGLE_SERVICES_JSON != ''
         uses: DamianReeves/write-file-action@6929a9a6d1807689191dcc8bbe62b54d70a32b42 # v1.3
         with:
           path: app/google-services.json
