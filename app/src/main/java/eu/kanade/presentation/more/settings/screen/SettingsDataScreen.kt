@@ -561,7 +561,6 @@ object SettingsDataScreen : SearchableSettings {
                         entries = persistentMapOf(
                             SyncManager.SyncService.NONE.value to stringResource(MR.strings.off),
                             SyncManager.SyncService.MANLORE.value to stringResource(KMR.strings.manlore_sync),
-                            SyncManager.SyncService.GOOGLE_DRIVE.value to stringResource(SYMR.strings.google_drive),
                         ),
                         title = stringResource(SYMR.strings.pref_sync_service),
                         onValueChanged = {

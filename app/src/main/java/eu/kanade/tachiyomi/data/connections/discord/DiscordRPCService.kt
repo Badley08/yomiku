@@ -31,6 +31,7 @@ import tachiyomi.core.common.util.lang.withIOContext
 import tachiyomi.domain.category.interactor.GetCategories
 import tachiyomi.domain.category.model.Category.Companion.UNCATEGORIZED_ID
 import tachiyomi.i18n.MR
+import tachiyomi.i18n.kmk.KMR
 import timber.log.Timber
 import uy.kohesive.injekt.Injekt
 import uy.kohesive.injekt.api.get
@@ -149,11 +150,11 @@ class DiscordRPCService : Service() {
         val builder = context.notificationBuilder(Notifications.CHANNEL_DISCORD_RPC) {
             setSmallIcon(R.drawable.ic_discord_24dp)
             setColor(ContextCompat.getColor(context, R.color.ic_launcher))
-            setLargeIcon(BitmapFactory.decodeResource(context.resources, R.drawable.komikku))
-            setContentText(context.getString(R.string.pref_discord_rpc))
+            setLargeIcon(BitmapFactory.decodeResource(context.resources, R.mipmap.ic_launcher))
+            setContentText(context.stringResource(KMR.strings.pref_enable_discord_rpc))
             // KMK -->
-            setContentTitle(context.getString(R.string.app_name))
-            addAction(R.drawable.ic_close_24dp, context.getString(R.string.action_stop), stopIntent)
+            setContentTitle(context.stringResource(MR.strings.app_name))
+            addAction(R.drawable.ic_close_24dp, context.stringResource(MR.strings.action_cancel), stopIntent)
             // KMK <--
             setAutoCancel(false)
             setOngoing(true)
@@ -326,12 +327,12 @@ class DiscordRPCService : Service() {
             val name = title ?: appName
             val details = customMessage.takeIf { it.isNotBlank() }
                 ?: title
-                ?: context.getString(discordScreen.details)
+                ?: context.stringResource(discordScreen.details)
 
             // Build buttons only if needed
             val buttonLabels = mutableListOf<String>().apply {
                 if (showButtons) {
-                    if (showDownloadButton) add(context.getString(DOWNLOAD_BUTTON_LABEL_RES, appName))
+                    if (showDownloadButton) add(context.stringResource(DOWNLOAD_BUTTON_LABEL_RES, appName))
                     if (showDiscordButton) add(DISCORD_BUTTON_LABEL)
                 }
             }
@@ -359,12 +360,12 @@ class DiscordRPCService : Service() {
                     assets = Activity.Assets(
                         largeImage = "$MP_PREFIX$imageUrl",
                         smallImage = "$MP_PREFIX${DiscordScreen.APP.imageUrl}",
-                        largeText = context.getString(
-                            R.string.discord_status_description,
-                            context.getString(discordScreen.details),
-                            title ?: context.getString(discordScreen.text),
+                        largeText = context.stringResource(
+                            KMR.strings.discord_status_description,
+                            context.stringResource(discordScreen.details),
+                            title ?: context.stringResource(discordScreen.text),
                         ),
-                        smallText = context.getString(R.string.discord_app_description),
+                        smallText = context.stringResource(KMR.strings.discord_app_description),
                     ),
                     buttons = buttonLabels.takeIf { it.isNotEmpty() },
                     metadata = metadata,

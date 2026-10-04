@@ -22,8 +22,12 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.rememberVectorPainter
 import androidx.compose.ui.viewinterop.AndroidView
 import cafe.adriel.voyager.navigator.tab.TabOptions
+import android.webkit.ConsoleMessage
+import android.webkit.WebChromeClient
 import eu.kanade.domain.manlore.ManLoreVaultManager
 import eu.kanade.presentation.util.Tab
+import logcat.LogPriority
+import tachiyomi.core.common.util.system.logcat
 import tachiyomi.presentation.core.components.material.Scaffold
 import java.util.Locale
 
@@ -33,6 +37,18 @@ class YomikuWebBridge(private val vaultManager: ManLoreVaultManager = ManLoreVau
 
     @JavascriptInterface
     fun getDeviceLanguage(): String = Locale.getDefault().language
+
+    @JavascriptInterface
+    fun log(level: String?, tag: String?, message: String?) {
+        val priority = when (level?.lowercase()) {
+            "error", "err" -> LogPriority.ERROR
+            "warn", "warning" -> LogPriority.WARN
+            "debug" -> LogPriority.DEBUG
+            else -> LogPriority.INFO
+        }
+        val logTag = tag?.takeIf { it.isNotBlank() } ?: "ManLore"
+        logcat(logTag, priority) { message.orEmpty() }
+    }
 }
 
 data object ManLoreTab : Tab {
@@ -76,6 +92,22 @@ data object ManLoreTab : Tab {
                                 mixedContentMode = WebSettings.MIXED_CONTENT_ALWAYS_ALLOW
                             }
                             addJavascriptInterface(YomikuWebBridge(), "YomikuBridge")
+                            webChromeClient = object : WebChromeClient() {
+                                override fun onConsoleMessage(consoleMessage: ConsoleMessage?): Boolean {
+                                    consoleMessage?.let {
+                                        val priority = when (it.messageLevel()) {
+                                            ConsoleMessage.MessageLevel.ERROR -> LogPriority.ERROR
+                                            ConsoleMessage.MessageLevel.WARNING -> LogPriority.WARN
+                                            ConsoleMessage.MessageLevel.DEBUG -> LogPriority.DEBUG
+                                            else -> LogPriority.INFO
+                                        }
+                                        logcat("ManLoreJS", priority) {
+                                            "${it.message()} [${it.sourceId()}:${it.lineNumber()}]"
+                                        }
+                                    }
+                                    return true
+                                }
+                            }
                             webViewClient = object : WebViewClient() {
                                 override fun onPageStarted(view: WebView?, url: String?, favicon: Bitmap?) {
                                     super.onPageStarted(view, url, favicon)

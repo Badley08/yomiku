@@ -106,7 +106,18 @@ class ExtensionStoreRepositoryImpl(
         }
     }
 
+    private suspend fun checkAndSeedDefaultStore() {
+        val count = handler.awaitOne { extension_storeQueries.getCount() }
+        if (count == 0L) {
+            insertFromPreference(
+                indexUrl = "https://github.com/keiyoushi/extensions/raw/repo/index.pb",
+                name = "Keiyoushi",
+            )
+        }
+    }
+
     override suspend fun getAll(): List<ExtensionStore> {
+        checkAndSeedDefaultStore()
         return handler.awaitList { extension_storeQueries.getAll(::extensionStoreMapper) }
     }
 

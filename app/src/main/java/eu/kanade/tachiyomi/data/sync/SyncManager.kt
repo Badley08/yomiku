@@ -129,7 +129,7 @@ class SyncManager(
             }
 
             SyncService.GOOGLE_DRIVE -> {
-                GoogleDriveSyncService(context, json, syncPreferences)
+                null
             }
 
             else -> {

@@ -8,7 +8,7 @@
         android:pathData="M0,0h432v432h-432z"/>
     <path
         android:pathData="M0,0h432v432h-432z"
-        android:fillColor="#0F172A"/>
+        android:fillColor="#F1F5F9"/>
     <path
         android:name="circle_outer"
         android:pathData="M 216 96 A 120 120 0 1 0 216.01 96 Z"
