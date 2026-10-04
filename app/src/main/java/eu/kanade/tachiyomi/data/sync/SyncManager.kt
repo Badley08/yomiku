@@ -109,9 +109,9 @@ class SyncManager(
             backupSavedSearches = backupCreator.backupSavedSearches(backupOptions),
             // SY <--
 
-            // KMK -->
+            // Yomiku (Badley08) -->
             backupFeeds = backupCreator.backupFeeds(backupOptions),
-            // KMK <--
+            // Yomiku (Badley08) <--
         )
         logcat(LogPriority.DEBUG) { "End create backup" }
 
@@ -183,9 +183,9 @@ class SyncManager(
             backupSavedSearches = remoteBackup.backupSavedSearches,
             // SY <--
 
-            // KMK -->
+            // Yomiku (Badley08) -->
             backupFeeds = remoteBackup.backupFeeds,
-            // KMK <--
+            // Yomiku (Badley08) <--
         )
 
         // It's local sync no need to restore data. (just update remote data)
@@ -249,10 +249,10 @@ class SyncManager(
             chaptersQueries.getChaptersByMangaId(
                 localManga.id,
                 0,
-                // KMK -->
+                // Yomiku (Badley08) -->
                 Manga.CHAPTER_SHOW_NOT_BOOKMARKED,
                 Manga.CHAPTER_SHOW_BOOKMARKED,
-                // KMK <--
+                // Yomiku (Badley08) <--
             ).executeAsList()
         }
         val localCategories = getCategories.await(localManga.id).map { it.order }

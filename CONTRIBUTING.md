@@ -1,15 +1,15 @@
-Looking to report an issue/bug or make a feature request? Please refer to the [README file](https://github.com/komikku-app/komikku#issues-feature-requests-and-contributing).
+Looking to report an issue/bug or make a feature request? Please refer to the [README file](https://github.com/Badley08/yomiku#issues-feature-requests-and-contributing).
 
 ---
 
-Thanks for your interest in contributing to Komikku!
+Thanks for your interest in contributing to Yomiku!
 
 
 # Code contributions
 
 Pull requests are welcome!
 
-If you're interested in taking on [an open issue](https://github.com/komikku-app/komikku/issues), please comment on it so others are aware.
+If you're interested in taking on [an open issue](https://github.com/Badley08/yomiku/issues), please comment on it so others are aware.
 You do not need to ask for permission nor an assignment.
 
 ## Prerequisites
@@ -26,28 +26,30 @@ Before you start, please note that the ability to use following technologies is 
 
 ## Getting help
 
-- Join [the Discord server](https://discord.gg/85jB7V5AJR) for online help and to ask questions while developing.
+<!-- TODO (Badley08): add Yomiku Discord invite link once the server is live -->
+- Open an issue on [GitHub](https://github.com/Badley08/yomiku/issues) for help and questions while developing.
 
 # Translations
 
-Translations are done externally via [Weblate](https://hosted.weblate.org/engage/komikku-app/). See [our website](https://komikku-app.github.io/docs/contribute#translation) for more details.
+<!-- TODO (Badley08): set up a Yomiku Weblate project -->
+Translations will be managed via Weblate in a future update. For now, please open a pull request with your translation files.
 
 
 # Forks
 
-Forks are allowed so long as they abide by [the project's LICENSE](https://github.com/komikku-app/komikku/blob/master/LICENSE).
+Forks are allowed so long as they abide by [the project's LICENSE](https://github.com/Badley08/yomiku/blob/main/LICENSE).
 
 When creating a fork, remember to:
 
 - To avoid confusion with the main app:
     - Change the app name
     - Change the app icon
-    - Change or disable the [app update checker](https://github.com/komikku-app/komikku/blob/master/app/src/main/java/eu/kanade/tachiyomi/data/updater/AppUpdateChecker.kt)
+    - Change or disable the [app update checker](https://github.com/Badley08/yomiku/blob/main/app/src/main/java/eu/kanade/tachiyomi/data/updater/AppUpdateChecker.kt)
 - To avoid installation conflicts:
-    - Change the `applicationId` in [`build.gradle.kts`](https://github.com/komikku-app/komikku/blob/master/app/build.gradle.kts)
+    - Change the `applicationId` in [`build.gradle.kts`](https://github.com/Badley08/yomiku/blob/main/app/build.gradle.kts)
 - To avoid having your data polluting the main app's analytics and crash report services:
-    - If you want to use Firebase analytics, replace [`google-services.json`](https://github.com/komikku-app/komikku/blob/master/app/src/standard/google-services.json) with your own
-    - If you want to use ACRA crash reporting, replace the `ACRA_URI` endpoint in [`build.gradle.kts`](https://github.com/komikku-app/komikku/blob/master/app/build.gradle.kts) with your own
+    - If you want to use Firebase analytics, replace [`google-services.json`](https://github.com/Badley08/yomiku/blob/main/app/src/standard/google-services.json) with your own
+    - If you want to use ACRA crash reporting, replace the `ACRA_URI` endpoint in [`build.gradle.kts`](https://github.com/Badley08/yomiku/blob/main/app/build.gradle.kts) with your own
 
 
 ### Supporting Cloud Sync - Google Drive Implementation

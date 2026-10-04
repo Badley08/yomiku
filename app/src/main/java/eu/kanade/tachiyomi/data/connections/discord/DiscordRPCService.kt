@@ -1,7 +1,6 @@
-// AM (DISCORD) -->
+// Yomiku (Badley08) - Discord -->
 
-// Taken from Animiru. Thank you Quickdev for permission!
-// Much improved by Cuong-Tran
+// Discord RPC service — adapted from Animiru (credit: Quickdev for the original permission).
 
 package eu.kanade.tachiyomi.data.connections.discord
 
@@ -49,7 +48,7 @@ class DiscordRPCService : Service() {
 
         val token = connectionsPreferences.connectionsToken(connectionsManager.discord).get()
 
-        // KMK -->
+        // Yomiku (Badley08) -->
         // Create RPC client only if token is valid
         if (token.isBlank()) {
             Timber.tag(TAG).w("Discord RPC disabled due to missing token")
@@ -60,7 +59,7 @@ class DiscordRPCService : Service() {
 
         // Show notification and enter foreground as early as possible
         notification(this)
-        // KMK <--
+        // Yomiku (Badley08) <--
 
         val status = when (connectionsPreferences.discordRPCStatus().get()) {
             -1 -> "dnd"
@@ -71,7 +70,7 @@ class DiscordRPCService : Service() {
         try {
             rpc = DiscordRPC(token, status)
 
-            // KMK -->
+            // Yomiku (Badley08) -->
             try {
                 discordScope.launchIO { setScreen(this@DiscordRPCService) }
             } catch (e: Exception) {
@@ -83,7 +82,7 @@ class DiscordRPCService : Service() {
             connectionsPreferences.enableDiscordRPC().set(false)
             stopSelf()
         }
-        // KMK <--
+        // Yomiku (Badley08) <--
     }
 
     override fun onDestroy() {
@@ -143,19 +142,19 @@ class DiscordRPCService : Service() {
     }
 
     private fun notification(context: Context) {
-        // KMK -->
+        // Yomiku (Badley08) -->
         val stopIntent = NotificationReceiver.stopDiscordRPCService(context)
-        // KMK <--
+        // Yomiku (Badley08) <--
 
         val builder = context.notificationBuilder(Notifications.CHANNEL_DISCORD_RPC) {
             setSmallIcon(R.drawable.ic_discord_24dp)
             setColor(ContextCompat.getColor(context, R.color.ic_launcher))
             setLargeIcon(BitmapFactory.decodeResource(context.resources, R.mipmap.ic_launcher))
             setContentText(context.stringResource(KMR.strings.pref_enable_discord_rpc))
-            // KMK -->
+            // Yomiku (Badley08) -->
             setContentTitle(context.stringResource(MR.strings.app_name))
             addAction(R.drawable.ic_close_24dp, context.stringResource(MR.strings.action_cancel), stopIntent)
-            // KMK <--
+            // Yomiku (Badley08) <--
             setAutoCancel(false)
             setOngoing(true)
             setUsesChronometer(true)
@@ -266,7 +265,7 @@ class DiscordRPCService : Service() {
 
             lastUsedScreen = discordScreen
 
-            // KMK -->
+            // Yomiku (Badley08) -->
             val showProgress = connectionsPreferences.discordShowProgress().get()
             val showTimestamp = connectionsPreferences.discordShowTimestamp().get()
 
@@ -293,31 +292,31 @@ class DiscordRPCService : Service() {
             } else {
                 null
             }
-            // KMK <--
+            // Yomiku (Badley08) <--
 
             updateDiscordRPC(
                 context = context,
                 discordScreen = discordScreen,
-                // KMK -->
+                // Yomiku (Badley08) -->
                 title = title,
                 state = state,
                 imageUrl = imageUrl,
                 timestamps = timestamps,
-                // KMK <--
+                // Yomiku (Badley08) <--
             )
         }
 
         private suspend fun updateDiscordRPC(
             context: Context,
             discordScreen: DiscordScreen,
-            // KMK -->
+            // Yomiku (Badley08) -->
             title: String? = null,
             state: String?,
             imageUrl: String,
             timestamps: Activity.Timestamps?,
             sinceTime: Long = since,
             appName: String = context.getString(R.string.app_name),
-            // KMK <--
+            // Yomiku (Badley08) <--
         ) {
             val customMessage = connectionsPreferences.discordCustomMessage().get()
             val showButtons = connectionsPreferences.discordShowButtons().get()
@@ -492,4 +491,4 @@ class DiscordRPCService : Service() {
         }
     }
 }
-// <-- AM (DISCORD)
+// <-- Yomiku (Badley08) - Discord

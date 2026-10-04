@@ -75,10 +75,10 @@ class AboutScreen : Screen() {
         val navigator = LocalNavigator.currentOrThrow
         var isCheckingUpdates by remember { mutableStateOf(false) }
 
-        // KMK -->
+        // Yomiku (Badley08) -->
         var isCheckingWhatsNew by remember { mutableStateOf(false) }
         var isCheckingWhatsComing by remember { mutableStateOf(false) }
-        // KMK <--
+        // Yomiku (Badley08) <--
 
         Scaffold(
             topBar = { scrollBehavior ->
@@ -237,7 +237,8 @@ class AboutScreen : Screen() {
                         title = stringResource(MR.strings.help_translate),
                         onPreferenceClick = {
                             uriHandler.openUri(
-                                "https://hosted.weblate.org/engage/komikku-app/",
+                                // TODO (Badley08): set up a Yomiku Weblate project when available
+                                "https://github.com/Badley08/yomiku",
                             )
                         },
                     )
@@ -280,21 +281,19 @@ class AboutScreen : Screen() {
         }
     }
 
-    /**
-     * Checks version and shows a user prompt if an update is available.
-     */
+    // Yomiku (Badley08) -->
     private suspend fun checkVersion(
         context: Context,
         onAvailableUpdate: (GetApplicationRelease.Result.NewUpdate) -> Unit,
         onFinish: () -> Unit,
-        // KMK -->
+        // Yomiku (Badley08) -->
         peekIntoPreview: Boolean = false,
-        // KMK <--
+        // Yomiku (Badley08) <--
     ) {
         val updateChecker = AppUpdateChecker(
-            // KMK -->
+            // Yomiku (Badley08) -->
             peekIntoPreview = peekIntoPreview,
-            // KMK <--
+            // Yomiku (Badley08) <--
         )
         withUIContext {
             try {
@@ -319,7 +318,7 @@ class AboutScreen : Screen() {
     }
 
     companion object {
-        // KMK -->
+        // Yomiku (Badley08) -->
         suspend fun getReleaseNotes(
             context: Context,
             onAvailableUpdate: (GetApplicationRelease.Result.NewUpdate) -> Unit,
@@ -343,7 +342,7 @@ class AboutScreen : Screen() {
                 }
             }
         }
-        // KMK <--
+        // Yomiku (Badley08) <--
 
         fun getVersionName(withBuildDate: Boolean): String {
             return when {

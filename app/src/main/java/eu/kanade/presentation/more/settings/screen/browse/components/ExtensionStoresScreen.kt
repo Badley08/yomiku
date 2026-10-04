@@ -25,7 +25,7 @@ import eu.kanade.presentation.theme.TachiyomiPreviewTheme
 import eu.kanade.tachiyomi.util.system.openInBrowser
 import kotlinx.collections.immutable.persistentListOf
 import mihon.domain.extension.model.ExtensionStore
-import mihon.domain.extension.model.KOMIKKU_SIGNATURE
+import mihon.domain.extension.model.UPSTREAM_KOMIKKU_SIGNATURE
 import mihon.domain.extension.model.REPO_HELP
 import mihon.domain.extension.model.REPO_SIGNATURE
 import tachiyomi.i18n.MR
@@ -44,10 +44,10 @@ fun ExtensionStoresScreen(
     onOpenWebsite: (ExtensionStore) -> Unit,
     onOpenDiscord: (ExtensionStore) -> Unit,
     onClickDelete: (ExtensionStore) -> Unit,
-    // KMK -->
+    // Yomiku (Badley08) -->
     onClickEnable: (ExtensionStore) -> Unit,
     onClickDisable: (ExtensionStore) -> Unit,
-    // KMK <--
+    // Yomiku (Badley08) <--
     onClickRefresh: () -> Unit,
     navigateUp: () -> Unit,
 ) {
@@ -80,7 +80,7 @@ fun ExtensionStoresScreen(
             EmptyScreen(
                 MR.strings.extensionStoresScreen_emptyLabel,
                 modifier = Modifier.padding(paddingValues),
-                // KMK -->
+                // Yomiku (Badley08) -->
                 help = {
                     TextButton(
                         onClick = { context.openInBrowser(REPO_HELP) },
@@ -91,7 +91,7 @@ fun ExtensionStoresScreen(
                         Text(text = stringResource(MR.strings.label_help))
                     }
                 },
-                // KMK <--
+                // Yomiku (Badley08) <--
             )
             return@Scaffold
         }
@@ -105,22 +105,22 @@ fun ExtensionStoresScreen(
             onOpenWebsite = onOpenWebsite,
             onOpenDiscord = onOpenDiscord,
             onClickDelete = onClickDelete,
-            // KMK -->
+            // Yomiku (Badley08) -->
             onClickEnable = onClickEnable,
             onClickDisable = onClickDisable,
             disabledRepos = state.disabledRepos,
-            // KMK <--
+            // Yomiku (Badley08) <--
         )
     }
 }
 
-// KMK -->
+// Yomiku (Badley08) -->
 @PreviewLightDark
 @Composable
 private fun ExtensionStoresScreenPreview() {
     val state = ExtensionStoreScreenState.Success(
         stores = persistentListOf(
-            ExtensionStore("https://komikku", "Komikku", "", KOMIKKU_SIGNATURE, ExtensionStore.Contact("", ""), false, null),
+            ExtensionStore("https://komikku", "Komikku", "", UPSTREAM_KOMIKKU_SIGNATURE, ExtensionStore.Contact("", ""), false, null),
             ExtensionStore("https://repo", "Repo", "", REPO_SIGNATURE, ExtensionStore.Contact("", ""), false, null),
             ExtensionStore("https://other", "Other", "", "key2", ExtensionStore.Contact("", ""), true, null),
         ),
@@ -165,4 +165,4 @@ private fun ExtensionStoresScreenEmptyPreview() {
         }
     }
 }
-// KMK <--
+// Yomiku (Badley08) <--

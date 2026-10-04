@@ -61,7 +61,7 @@ import eu.kanade.tachiyomi.util.system.LocaleHelper
 import eu.kanade.tachiyomi.util.system.launchRequestPackageInstallsPermission
 import kotlinx.collections.immutable.persistentListOf
 import mihon.domain.extension.model.ExtensionStore
-import mihon.domain.extension.model.KOMIKKU_SIGNATURE
+import mihon.domain.extension.model.UPSTREAM_KOMIKKU_SIGNATURE
 import tachiyomi.i18n.MR
 import tachiyomi.i18n.kmk.KMR
 import tachiyomi.i18n.sy.SYMR
@@ -157,9 +157,9 @@ private fun ExtensionContent(
     val context = LocalContext.current
     var trustState by remember { mutableStateOf<Extension.Untrusted?>(null) }
     val installGranted = rememberRequestPackageInstallsPermissionState(initialValue = true)
-    // KMK -->
+    // Yomiku (Badley08) -->
     val navigator = LocalNavigator.current
-    // KMK <--
+    // Yomiku (Badley08) <--
 
     FastScrollLazyColumn(
         contentPadding = contentPadding + topSmallPaddingValues,
@@ -196,7 +196,7 @@ private fun ExtensionContent(
                                         }
                                     }
                                 }
-                                // KMK -->
+                                // Yomiku (Badley08) -->
                                 KMR.strings.extensions_page_more -> {
                                     {
                                         Button(onClick = { navigator?.push(ExtensionStoresScreen()) }) {
@@ -209,7 +209,7 @@ private fun ExtensionContent(
                                         }
                                     }
                                 }
-                                // KMK <--
+                                // Yomiku (Badley08) <--
                                 else -> {
                                     {}
                                 }
@@ -217,9 +217,9 @@ private fun ExtensionContent(
                         ExtensionHeader(
                             textRes = header.textRes,
                             modifier = Modifier
-                                // KMK -->
+                                // Yomiku (Badley08) -->
                                 .padding(end = MaterialTheme.padding.small)
-                                // KMK <--
+                                // Yomiku (Badley08) <--
                                 .animateItemFastScroll(),
                             action = action,
                         )
@@ -384,10 +384,10 @@ private fun ExtensionItemContent(
         ) {
             ProvideTextStyle(value = MaterialTheme.typography.bodySmall) {
                 var hasAlreadyShownAnElement by remember { mutableStateOf(false) }
-                // KMK -->
+                // Yomiku (Badley08) -->
                 extension.lang?.let {
                     if (it.isNotEmpty()) {
-                        // KMK <--
+                        // Yomiku (Badley08) <--
                         hasAlreadyShownAnElement = true
                         Text(
                             text = /* KMK --> */FlagEmoji.getEmojiLangFlag(it) + " " + /* KMK <-- */
@@ -404,9 +404,9 @@ private fun ExtensionItemContent(
                     )
                 }
 
-                // KMK -->
+                // Yomiku (Badley08) -->
                 Text(text = extension.storeName?.let { "@$it" } ?: "(?)")
-                // KMK <--
+                // Yomiku (Badley08) <--
 
                 val warning = when {
                     extension is Extension.Untrusted -> MR.strings.ext_untrusted
@@ -595,7 +595,7 @@ private fun ExtensionTrustDialog(
     )
 }
 
-// KMK -->
+// Yomiku (Badley08) -->
 @PreviewLightDark
 @Composable
 private fun ExtensionItemContentPreview() {
@@ -612,7 +612,7 @@ private fun ExtensionItemContentPreview() {
         sources = emptyList(),
         apkUrl = "Test",
         iconUrl = "",
-        store = ExtensionStore("https://komikku", "Komikku", "", KOMIKKU_SIGNATURE, ExtensionStore.Contact("", ""), false, null),
+        store = ExtensionStore("https://komikku", "Komikku", "", UPSTREAM_KOMIKKU_SIGNATURE, ExtensionStore.Contact("", ""), false, null),
     )
     val extInstalled = Extension.Installed(
         name = "Tachiyomi",
@@ -625,7 +625,7 @@ private fun ExtensionItemContentPreview() {
         signatureHash = "900000",
         storeName = "Komikku",
         sources = emptyList(),
-        store = ExtensionStore("https://komikku", "Komikku", "", KOMIKKU_SIGNATURE, ExtensionStore.Contact("", ""), false, null),
+        store = ExtensionStore("https://komikku", "Komikku", "", UPSTREAM_KOMIKKU_SIGNATURE, ExtensionStore.Contact("", ""), false, null),
         pkgFactory = null,
         icon = null,
         hasUpdate = false,
@@ -673,4 +673,4 @@ private fun ExtensionItemContentPreview() {
         }
     }
 }
-// KMK <--
+// Yomiku (Badley08) <--

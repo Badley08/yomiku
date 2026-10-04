@@ -43,19 +43,19 @@ val migrations: List<Migration>
         // MoveExtensionRepoSettingsMigration(),
         // MoveCacheToDiskSettingMigration(),
         // MoveEncryptionSettingsToAppStateMigration(),
-        // KMK -->
+        // Yomiku (Badley08) -->
         IntegratedHentaiMigration(),
         SetupAppUpdateMigration(),
         EHentaiMigration(),
         MergedMangaDedupeModeMigration(),
-        // KMK <--
+        // Yomiku (Badley08) <--
         TrustExtensionRepositoryMigration(),
         CategoryPreferencesCleanupMigration(),
         RemoveDuplicateReaderPreferenceMigration(),
-        // KMK -->
+        // Yomiku (Badley08) -->
         DisabledRepoMigration(),
         SyncPrefKeyMigration(),
         ChapterUrlHashMigration(),
         BuiltinExtensionStoreMigration(),
-        // KMK <--
+        // Yomiku (Badley08) <--
     )

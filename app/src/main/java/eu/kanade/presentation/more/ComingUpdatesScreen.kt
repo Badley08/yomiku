@@ -69,15 +69,15 @@ fun ComingUpdatesScreen(
 private fun ComingUpdatesScreenPreview() {
     TachiyomiPreviewTheme {
         ComingUpdatesScreen(
-            versionName = "v0.99.9",
+            versionName = "v1.14.1",
             changelogInfo = """
-                ## Yay
-                Foobar
+                ## Yomiku Coming Soon
+                New features in progress!
 
                 ### More info
-                [komikku-app/komikku@23d862d17...48fb4a2e6](https://github.com/komikku-app/komikku/compare/23d862d17...48fb4a2e6)
-                - Hello ([@cuong-tran](@https://github.com/cuong-tran))
-                - World
+                [Badley08/yomiku@main](https://github.com/Badley08/yomiku)
+                - ManLore Drive sync improvements ([@Badley08](https://github.com/Badley08))
+                - Discord RPC Yomiku server support ([@Badley08](https://github.com/Badley08))
             """.trimIndent(),
             onOpenInBrowser = {},
             onRejectUpdate = {},

@@ -1,8 +1,6 @@
-// AM (DISCORD) -->
+// Yomiku (Badley08) - Discord -->
 
-// Taken from Animiru. Thank you Quickdev for permission!
-// Original library from https://github.com/dead8309/KizzyRPC (Thank you)
-// Thank you to the 最高 man for the refactored and simplified code
+// Discord RPC models — adapted from Animiru (credit: Quickdev) and KizzyRPC (https://github.com/dead8309/KizzyRPC).
 package eu.kanade.tachiyomi.data.connections.discord
 
 import dev.icerock.moko.resources.StringResource
@@ -22,6 +20,7 @@ internal const val RICH_PRESENCE_APPLICATION_ID = "1424627741256585271"
 val DOWNLOAD_BUTTON_LABEL_RES: StringResource = KMR.strings.discord_download_button
 const val DOWNLOAD_BUTTON_URL = "https://github.com/Badley08/yomiku/releases"
 const val DISCORD_BUTTON_LABEL = "Yomiku"
+// TODO (Badley08): replace with Yomiku Discord invite once the server is live
 const val DISCORD_BUTTON_URL = "https://github.com/Badley08/yomiku"
 
 @Serializable
@@ -186,7 +185,7 @@ enum class DiscordScreen(
     val details: StringResource,
     val imageUrl: String,
 ) {
-    APP(MR.strings.app_name, KMR.strings.discord_status_using, KOMIKKU_IMAGE),
+    APP(MR.strings.app_name, KMR.strings.discord_status_using, YOMIKU_IMAGE),
     LIBRARY(MR.strings.label_library, KMR.strings.discord_status_browsing, LIBRARY_IMAGE_URL),
     UPDATES(MR.strings.label_recent_updates, KMR.strings.discord_status_scrolling, UPDATES_IMAGE_URL),
     HISTORY(MR.strings.label_recent_manga, KMR.strings.discord_status_scrolling, HISTORY_IMAGE_URL),
@@ -196,11 +195,11 @@ enum class DiscordScreen(
     MANGA(MR.strings.manga, MR.strings.reading, MANGA_IMAGE_URL),
 }
 
-// Constants for standard Rich Presence image urls
-private const val KOMIKKU_IMAGE_URL = "emojis/1365538288894738532.webp?quality=lossless"
-private const val KOMIKKU_PREVIEW_IMAGE_URL = "emojis/1365538288894738532.webp?quality=lossless"
+// Constants for standard Rich Presence image URLs (Yomiku)
+private const val YOMIKU_IMAGE_URL = "emojis/1365538288894738532.webp?quality=lossless"
+private const val YOMIKU_PREVIEW_IMAGE_URL = "emojis/1365538288894738532.webp?quality=lossless"
 
-private val KOMIKKU_IMAGE = if (isPreviewBuildType) KOMIKKU_PREVIEW_IMAGE_URL else KOMIKKU_IMAGE_URL
+private val YOMIKU_IMAGE = if (isPreviewBuildType) YOMIKU_PREVIEW_IMAGE_URL else YOMIKU_IMAGE_URL
 private const val LIBRARY_IMAGE_URL = "emojis/1365262809050644591.webp?quality=lossless"
 private const val UPDATES_IMAGE_URL = "emojis/1365261957883625492.webp?quality=lossless"
 private const val HISTORY_IMAGE_URL = "emojis/1365262076787949598.webp?quality=lossless"
@@ -208,4 +207,4 @@ private const val BROWSE_IMAGE_URL = "emojis/1365263374992146576.webp?quality=lo
 private const val MORE_IMAGE_URL = "emojis/1365261438276599849.webp?quality=lossless"
 private const val WEBVIEW_IMAGE_URL = "emojis/1365262268811579443.webp?quality=lossless"
 private const val MANGA_IMAGE_URL = "emojis/1365263962622529576.webp?quality=lossless"
-// <-- AM (DISCORD)
+// <-- Yomiku (Badley08) - Discord

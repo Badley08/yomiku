@@ -35,7 +35,7 @@ import eu.kanade.presentation.theme.TachiyomiPreviewTheme
 import eu.kanade.tachiyomi.R
 import kotlinx.collections.immutable.persistentListOf
 import mihon.domain.extension.model.ExtensionStore
-import mihon.domain.extension.model.KOMIKKU_SIGNATURE
+import mihon.domain.extension.model.UPSTREAM_KOMIKKU_SIGNATURE
 import mihon.domain.extension.model.REPO_SIGNATURE
 import tachiyomi.i18n.MR
 import tachiyomi.presentation.core.components.material.padding
@@ -52,11 +52,11 @@ fun ExtensionStoresContent(
     onOpenWebsite: (ExtensionStore) -> Unit,
     onOpenDiscord: (ExtensionStore) -> Unit,
     onClickDelete: (ExtensionStore) -> Unit,
-    // KMK -->
+    // Yomiku (Badley08) -->
     onClickEnable: (ExtensionStore) -> Unit,
     onClickDisable: (ExtensionStore) -> Unit,
     disabledRepos: Set<String>,
-    // KMK <--
+    // Yomiku (Badley08) <--
     modifier: Modifier = Modifier,
 ) {
     LazyColumn(
@@ -74,11 +74,11 @@ fun ExtensionStoresContent(
                     onOpenDiscord = { onOpenDiscord(it) },
                     onCopy = { onCopy(it) },
                     onDelete = { onClickDelete(it) },
-                    // KMK -->
+                    // Yomiku (Badley08) -->
                     onEnable = { onClickEnable(it) },
                     onDisable = { onClickDisable(it) },
                     isDisabled = it.indexUrl in disabledRepos,
-                    // KMK <--
+                    // Yomiku (Badley08) <--
                 )
             }
         }
@@ -93,16 +93,16 @@ private fun ExtensionStoresListItem(
     onCopy: () -> Unit,
     onDelete: () -> Unit,
     modifier: Modifier = Modifier,
-    // KMK -->
+    // Yomiku (Badley08) -->
     isDisabled: Boolean,
     onEnable: () -> Unit,
     onDisable: () -> Unit,
-    // KMK <--
+    // Yomiku (Badley08) <--
 ) {
     ElevatedCard(
         modifier = modifier,
     ) {
-        // KMK -->
+        // Yomiku (Badley08) -->
         Row(
             modifier = Modifier
                 .padding(start = MaterialTheme.padding.medium),
@@ -118,7 +118,7 @@ private fun ExtensionStoresListItem(
                     .align(Alignment.CenterVertically),
             )
             Column {
-                // KMK <--
+                // Yomiku (Badley08) <--
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -133,10 +133,10 @@ private fun ExtensionStoresListItem(
                         text = store.name,
                         // KMK: modifier = Modifier.padding(start = MaterialTheme.padding.medium),
                         style = MaterialTheme.typography.titleMedium,
-                        // KMK -->
+                        // Yomiku (Badley08) -->
                         color = LocalContentColor.current.let { if (isDisabled) it.copy(alpha = 0.6f) else it },
                         textDecoration = TextDecoration.LineThrough.takeIf { isDisabled },
-                        // KMK <--
+                        // Yomiku (Badley08) <--
                     )
                 }
 
@@ -167,14 +167,14 @@ private fun ExtensionStoresListItem(
                         )
                     }
 
-                    // KMK -->
+                    // Yomiku (Badley08) -->
                     IconButton(onClick = if (isDisabled) onEnable else onDisable) {
                         Icon(
                             imageVector = if (isDisabled) Icons.Outlined.Visibility else Icons.Outlined.VisibilityOff,
                             contentDescription = stringResource(MR.strings.action_disable),
                         )
                     }
-                    // KMK <--
+                    // Yomiku (Badley08) <--
 
                     IconButton(onClick = onDelete) {
                         Icon(
@@ -188,9 +188,9 @@ private fun ExtensionStoresListItem(
     }
 }
 
-// KMK -->
+// Yomiku (Badley08) -->
 fun repoResId(signKey: String) = when (signKey) {
-    KOMIKKU_SIGNATURE -> R.mipmap.komikku
+    UPSTREAM_KOMIKKU_SIGNATURE -> R.mipmap.komikku
     REPO_SIGNATURE -> R.mipmap.repo
     else -> R.mipmap.extension
 }
@@ -199,7 +199,7 @@ fun repoResId(signKey: String) = when (signKey) {
 @Composable
 fun ExtensionReposContentPreview() {
     val repos = persistentListOf(
-        ExtensionStore("https://komikku", "Komikku", "", KOMIKKU_SIGNATURE, ExtensionStore.Contact("", ""), false, null),
+        ExtensionStore("https://komikku", "Komikku", "", UPSTREAM_KOMIKKU_SIGNATURE, ExtensionStore.Contact("", ""), false, null),
         ExtensionStore("https://repo", "Repo", "", REPO_SIGNATURE, ExtensionStore.Contact("", ""), false, null),
         ExtensionStore("https://other", "Other", "", "key2", ExtensionStore.Contact("", ""), true, null),
     )
@@ -220,4 +220,4 @@ fun ExtensionReposContentPreview() {
         }
     }
 }
-// KMK <--
+// Yomiku (Badley08) <--
